@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atabei/core/resources/data_state.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_state.dart';
-import 'package:atabei/features/timeline/data/models/post_model.dart';
 
 class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
   final PostRepository _postsRepository;
@@ -19,11 +18,12 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     
     on<StartTimelineStream>(_onStartTimelineStream);
     on<StopTimelineStream>(_onStopTimelineStream);
-    on<LoadNewPosts>(_onLoadNewPosts);
+    on<RefreshTimeline>(_onRefreshTimeline);
     on<LikePost>(_onLikePost);
     on<UnlikePost>(_onUnlikePost);
     on<CreatePost>(_onCreatePost);
     on<LoadTimelinePosts>(_onLoadTimelinePosts);
+    on<StreamDataReceived>(_onStreamDataReceived); 
   }
 
   void _onStartTimelineStream(
@@ -31,6 +31,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     Emitter<TimelineState> emit,
   ) async {
     try {
+      print('🚀 Starting timeline stream...');
       emit(TimelineLoading());
       
       await _postsStreamSubscription?.cancel();
@@ -39,70 +40,95 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
           .getPostsStream(limit: event.limit)
           .listen(
         (dataState) {
-          if (dataState is DataSuccess && dataState.data != null) {
-            final newPosts = dataState.data!;
-            _latestStreamPosts = newPosts;
-            
-            if (_currentPosts.isEmpty) {
-              // First load
-              _currentPosts = newPosts;
-              add(const LoadNewPosts());
-            } else if (newPosts.isNotEmpty && _currentPosts.isNotEmpty) {
-              // Check for newer posts
-              final latestCurrentPost = _currentPosts.first;
-              final newerPosts = newPosts.where((post) =>
-                  post.dateOfPost.isAfter(latestCurrentPost.dateOfPost)).toList();
-              
-              if (newerPosts.isNotEmpty) {
-                // New posts available - show indicator
-                if (state is TimelineLoaded) {
-                  final currentState = state as TimelineLoaded;
-                  emit(currentState.copyWith(
-                    hasNewPosts: true,
-                    newPostsCount: newerPosts.length,
-                    isStreamActive: true,
-                  ));
-                }
-              } else {
-                // Update existing posts (likes, comments, etc.)
-                _currentPosts = newPosts;
-                if (state is TimelineLoaded) {
-                  final currentState = state as TimelineLoaded;
-                  emit(currentState.copyWith(
-                    posts: _currentPosts,
-                    isStreamActive: true,
-                  ));
-                }
-              }
-            }
-          } else if (dataState is DataError) {
-            if (state is TimelineLoaded) {
-              final currentState = state as TimelineLoaded;
-              emit(currentState.copyWith(
-                error: dataState.error?.message ?? 'Unknown error',
-                isStreamActive: true,
-              ));
-            } else {
-              emit(TimelineError(
-                message: dataState.error?.message ?? 'Unknown error',
-              ));
-            }
-          }
+          print('📡 Stream received data: ${dataState.runtimeType}');
+          
+          // Instead of emitting directly, add an internal event !IMPORTANTTTT
+          add(StreamDataReceived(dataState));
         },
         onError: (error) {
-          if (state is TimelineLoaded) {
-            final currentState = state as TimelineLoaded;
-            emit(currentState.copyWith(
-              error: error.toString(),
-              isStreamActive: false,
-            ));
-          } else {
-            emit(TimelineError(message: error.toString()));
-          }
+          print('❌ Stream listener error: $error');
+          add(StreamError(error.toString()));
         },
       );
     } catch (e) {
+      print('❌ Stream setup error: $e');
       emit(TimelineError(message: e.toString()));
+    }
+  }
+
+  void _onStreamDataReceived(
+    StreamDataReceived event,
+    Emitter<TimelineState> emit,
+  ) {
+    final dataState = event.dataState;
+    
+    if (dataState is DataSuccess && dataState.data != null) {
+      final newPosts = dataState.data!;
+      print('📝 Received ${newPosts.length} posts from stream');
+      
+      for (var post in newPosts) {
+        print('   Post: ${post.username} - ${post.content} - ${post.dateOfPost}');
+      }
+      
+      // ALWAYS update _latestStreamPosts first!
+      _latestStreamPosts = newPosts;
+      print('📦 Updated _latestStreamPosts with ${_latestStreamPosts.length} posts');
+      
+      if (_currentPosts.isEmpty) {
+        // First load
+        print('🔄 First load detected - emitting directly');
+        _currentPosts = newPosts;
+        emit(TimelineLoaded(
+          posts: _currentPosts,
+          hasNewPosts: false,
+          newPostsCount: 0,
+          isStreamActive: true,
+        ));
+      } else if (newPosts.isNotEmpty && _currentPosts.isNotEmpty) {
+        print('🔍 Checking for newer posts...');
+        final latestCurrentPost = _currentPosts.first;
+        print('   Latest current post date: ${latestCurrentPost.dateOfPost}');
+        
+        final newerPosts = newPosts.where((post) =>
+            post.dateOfPost.isAfter(latestCurrentPost.dateOfPost)).toList();
+        
+        print('   Found ${newerPosts.length} newer posts');
+        
+        if (newerPosts.isNotEmpty) {
+          print('✨ Showing new posts indicator');
+          if (state is TimelineLoaded) {
+            final currentState = state as TimelineLoaded;
+            emit(currentState.copyWith(
+              hasNewPosts: true,
+              newPostsCount: newerPosts.length,
+              isStreamActive: true,
+            ));
+          }
+        } else {
+          print('🔄 Updating existing posts (likes, etc.)');
+          _currentPosts = newPosts;
+          if (state is TimelineLoaded) {
+            final currentState = state as TimelineLoaded;
+            emit(currentState.copyWith(
+              posts: _currentPosts,
+              isStreamActive: true,
+            ));
+          }
+        }
+      }
+    } else if (dataState is DataError) {
+      print('❌ Stream error: ${dataState.error?.message}');
+      if (state is TimelineLoaded) {
+        final currentState = state as TimelineLoaded;
+        emit(currentState.copyWith(
+          error: dataState.error?.message ?? 'Unknown error',
+          isStreamActive: true,
+        ));
+      } else {
+        emit(TimelineError(
+          message: dataState.error?.message ?? 'Unknown error',
+        ));
+      }
     }
   }
 
@@ -116,6 +142,39 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     if (state is TimelineLoaded) {
       final currentState = state as TimelineLoaded;
       emit(currentState.copyWith(isStreamActive: false));
+    }
+  }
+
+  void _onRefreshTimeline(
+    RefreshTimeline event,
+    Emitter<TimelineState> emit,
+  ) async {
+    if (_postsStreamSubscription != null) {
+      print('🔄 Refreshing from stream data...'); // Add debug
+      
+      // Use the latest stream data
+      _currentPosts = _latestStreamPosts;
+      emit(TimelineLoaded(
+        posts: _currentPosts,
+        hasNewPosts: false,
+        newPostsCount: 0,
+        isStreamActive: true,
+      ));
+    } else {
+      print('🔄 No stream active, fetching manually...'); // Add debug
+      
+      emit(TimelineLoading());
+      final result = await _postsRepository.getPosts(limit: event.limit);
+      
+      if (result is DataSuccess) {
+        _currentPosts = result.data!;
+        emit(TimelineLoaded(
+          posts: _currentPosts,
+          isStreamActive: false,
+        ));
+      } else if (result is DataError) {
+        emit(TimelineError(message: result.error?.message ?? 'Failed to load posts'));
+      }
     }
   }
 
@@ -191,9 +250,22 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       final result = await _postsRepository.createPost(event.post);
       
       if (result is DataSuccess) {
-        // New post will come through the stream
-        emit(currentState);
+        final createdPost = result.data!;
+        print('✅ Post created: ${createdPost.id}');
+        
+        // Optimistically add the new post immediately
+        final updatedPosts = [createdPost, ..._currentPosts];
+        _currentPosts = updatedPosts.cast<PostEntity>();
+        
+        emit(TimelineLoaded(
+          posts: updatedPosts.cast<PostEntity>(),
+          hasNewPosts: false,
+          newPostsCount: 0,
+          isStreamActive: _postsStreamSubscription != null,
+        ));
+        
       } else if (result is DataError) {
+        print('❌ Post creation failed: ${result.error?.message}');
         emit(currentState.copyWith(
           error: result.error?.message ?? 'Failed to create post',
         ));
@@ -206,9 +278,23 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     Emitter<TimelineState> emit,
   ) async {
     if (event.isRefresh) {
-      // Restart the stream for refresh
-      add(StartTimelineStream(limit: event.limit));
+      // For refresh, keep the stream active but reload data
+      if (_postsStreamSubscription != null) {
+        if (state is TimelineLoaded) {
+          final currentState = state as TimelineLoaded;
+          _currentPosts = _latestStreamPosts;
+          emit(currentState.copyWith(
+            posts: _currentPosts,
+            hasNewPosts: false,
+            newPostsCount: 0,
+            isStreamActive: true,
+          ));
+        }
+      } else {
+        add(StartTimelineStream(limit: event.limit));
+      }
     } else {
+      // Initial load without stream
       emit(TimelineLoading());
       
       final result = await _postsRepository.getPosts(limit: event.limit);

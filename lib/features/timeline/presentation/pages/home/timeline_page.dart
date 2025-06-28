@@ -35,9 +35,7 @@ class TimelineView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              context.read<TimelineBloc>().add(
-                const LoadTimelinePosts(isRefresh: true),
-              );
+              context.read<TimelineBloc>().add(const RefreshTimeline());
             },
           ),
         ],
@@ -61,24 +59,24 @@ class TimelineView extends StatelessWidget {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  color: TimelineTheme.timelineAccent.withOpacity(0.1),
+                  color: Colors.blue.withOpacity(0.1),
                   child: InkWell(
                     onTap: () {
-                      context.read<TimelineBloc>().add(LoadNewPosts());
+                      context.read<TimelineBloc>().add(const RefreshTimeline());
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.keyboard_arrow_up,
-                          color: TimelineTheme.timelineAccent,
+                          color: Colors.blue,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Show ${state.newPostsCount} new post${state.newPostsCount > 1 ? 's' : ''}',
-                          style: TextStyle(
-                            color: TimelineTheme.timelineAccent,
+                          style: const TextStyle(
+                            color: Colors.blue,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -170,9 +168,7 @@ class TimelineView extends StatelessWidget {
 
       return RefreshIndicator(
         onRefresh: () async {
-          context.read<TimelineBloc>().add(
-            const LoadTimelinePosts(isRefresh: true),
-          );
+          context.read<TimelineBloc>().add(const RefreshTimeline());
         },
         child: ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -185,17 +181,17 @@ class TimelineView extends StatelessWidget {
               child: PostWidget(
                 post: post,
                 isLiking: state is TimelinePostLiking && 
-                        (state as TimelinePostLiking).postId == post.id, // Removed .toString()
+                         (state as TimelinePostLiking).postId == post.id,
                 onLike: () {
-                  const String currentUserId = 'current_user_id'; // Get from auth
+                  const String currentUserId = 'current_user_id';
                   context.read<TimelineBloc>().add(
-                    LikePost(postId: post.id, userId: currentUserId), // Removed .toString()
+                    LikePost(postId: post.id, userId: currentUserId),
                   );
                 },
                 onUnlike: () {
-                  const String currentUserId = 'current_user_id'; // Get from auth
+                  const String currentUserId = 'current_user_id';
                   context.read<TimelineBloc>().add(
-                    UnlikePost(postId: post.id, userId: currentUserId), // Removed .toString()
+                    UnlikePost(postId: post.id, userId: currentUserId),
                   );
                 },
               ),
@@ -213,7 +209,7 @@ class TimelineView extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         final usernameController = TextEditingController();
-        final contentController = TextEditingController(); // Add this
+        final contentController = TextEditingController();
         
         return AlertDialog(
           title: const Text('Create Post'),
@@ -229,7 +225,6 @@ class TimelineView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Add content input field
               TextField(
                 controller: contentController,
                 decoration: const InputDecoration(
@@ -238,7 +233,7 @@ class TimelineView extends StatelessWidget {
                   hintText: 'Share your thoughts...',
                 ),
                 maxLines: 3,
-                maxLength: 280, // Twitter-like character limit
+                maxLength: 280,
               ),
               const SizedBox(height: 8),
               const Text(
@@ -258,16 +253,14 @@ class TimelineView extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                // Update validation to check both fields
                 if (usernameController.text.isNotEmpty && 
                     contentController.text.isNotEmpty) {
-                  // Create post with the properties that match your PostModel
                   final post = PostEntity(
-                    id: '', // Empty string - Firestore will generate the actual ID
-                    userId: 123, // In real app, get from auth
+                    id: '',
+                    userId: 123,
                     username: usernameController.text.trim(),
-                    content: contentController.text.trim(), // Add this line
-                    pathToProfilePicture: null, // Optional profile picture
+                    content: contentController.text.trim(),
+                    pathToProfilePicture: null,
                     dateOfPost: DateTime.now(),
                     timeOfPost: DateTime.now(),
                     likes: 0,
@@ -279,7 +272,6 @@ class TimelineView extends StatelessWidget {
                   context.read<TimelineBloc>().add(CreatePost(post: post));
                   Navigator.of(dialogContext).pop();
                   
-                  // Show success message
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Post created successfully!'),
@@ -287,7 +279,6 @@ class TimelineView extends StatelessWidget {
                     ),
                   );
                 } else {
-                  // Show error if required fields are empty
                   String errorMessage = '';
                   if (usernameController.text.isEmpty) {
                     errorMessage = 'Please enter a username';

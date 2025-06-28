@@ -1,3 +1,4 @@
+import 'package:atabei/core/resources/data_state.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:equatable/equatable.dart';
 
@@ -72,4 +73,31 @@ class CreatePost extends TimelineEvent {
 
   @override
   List<Object?> get props => [post];
+}
+
+class RefreshTimeline extends TimelineEvent {
+  final int limit;
+  
+  const RefreshTimeline({this.limit = 20});
+
+  @override
+  List<Object?> get props => [limit];
+}
+
+class StreamDataReceived extends TimelineEvent {
+  final DataState<List<PostEntity>> dataState;
+  
+  const StreamDataReceived(this.dataState);
+  
+  @override
+  List<Object?> get props => [dataState];
+}
+
+class StreamError extends TimelineEvent {
+  final String error;
+  
+  const StreamError(this.error);
+  
+  @override
+  List<Object?> get props => [error];
 }
