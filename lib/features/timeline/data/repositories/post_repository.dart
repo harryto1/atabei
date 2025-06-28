@@ -22,7 +22,6 @@ class PostRepositoryImpl implements PostRepository {
         content: post.content,
         pathToProfilePicture: post.pathToProfilePicture,
         dateOfPost: post.dateOfPost,
-        timeOfPost: post.timeOfPost,
         likes: post.likes,
         comments: post.comments,
         reposts: post.reposts,

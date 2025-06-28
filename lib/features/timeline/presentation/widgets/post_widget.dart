@@ -82,7 +82,7 @@ class PostWidget extends StatelessWidget {
                 const SizedBox(height: 8),
                 // Optional: Show post timestamp
                 Text(
-                  '${_formatDate(post.dateOfPost)} at ${_formatTime(post.timeOfPost)}',
+                  '${_formatDate(post.dateOfPost)} at ${_formatTime(post.dateOfPost)}',
                   style: TimelineTheme.timelineTimestampStyle(context).copyWith(
                     fontSize: 12,
                   ),

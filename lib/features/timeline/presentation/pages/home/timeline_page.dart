@@ -262,7 +262,6 @@ class TimelineView extends StatelessWidget {
                     content: contentController.text.trim(),
                     pathToProfilePicture: null,
                     dateOfPost: DateTime.now(),
-                    timeOfPost: DateTime.now(),
                     likes: 0,
                     comments: 0,
                     reposts: 0,

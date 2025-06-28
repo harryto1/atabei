@@ -6,7 +6,6 @@ class PostEntity extends Equatable {
   final String username; 
   final String? pathToProfilePicture; 
   final DateTime dateOfPost; 
-  final DateTime timeOfPost; 
   final int likes;
   final int comments;
   final int reposts;
@@ -19,7 +18,6 @@ class PostEntity extends Equatable {
     required this.username,
     this.pathToProfilePicture,
     required this.dateOfPost,
-    required this.timeOfPost,
     required this.likes,
     required this.comments,
     required this.reposts,
@@ -34,7 +32,6 @@ class PostEntity extends Equatable {
         username,
         pathToProfilePicture,
         dateOfPost,
-        timeOfPost,
         likes,
         comments,
         reposts,
