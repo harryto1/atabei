@@ -1,3 +1,5 @@
+import 'package:atabei/components/appbar/appbar_widget.dart';
+import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_bloc.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
@@ -13,10 +15,16 @@ class TimelinePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => TimelineBloc(
-        postsRepository: PostRepositoryImpl(),
-      )..add(const StartTimelineStream()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: context.read<AuthBloc>()),
+        BlocProvider(
+          create:
+              (context) =>
+                  TimelineBloc(postsRepository: PostRepositoryImpl())
+                    ..add(const StartTimelineStream()),
+        ),
+      ],
       child: const TimelineView(),
     );
   }
@@ -29,17 +37,7 @@ class TimelineView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: TimelineTheme.timelineBackgroundColor(context),
-      appBar: AppBar(
-        title: const Text('Timeline'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              context.read<TimelineBloc>().add(const RefreshTimeline());
-            },
-          ),
-        ],
-      ),
+      appBar: appBarWidget(),
       body: BlocConsumer<TimelineBloc, TimelineState>(
         listener: (context, state) {
           if (state is TimelineLoaded && state.error != null) {
@@ -86,9 +84,7 @@ class TimelineView extends StatelessWidget {
                 ),
 
               // Content
-              Expanded(
-                child: _buildContent(context, state),
-              ),
+              Expanded(child: _buildContent(context, state)),
             ],
           );
         },
@@ -180,8 +176,9 @@ class TimelineView extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 16),
               child: PostWidget(
                 post: post,
-                isLiking: state is TimelinePostLiking && 
-                         (state as TimelinePostLiking).postId == post.id,
+                isLiking:
+                    state is TimelinePostLiking &&
+                    (state as TimelinePostLiking).postId == post.id,
                 onLike: () {
                   const String currentUserId = 'current_user_id';
                   context.read<TimelineBloc>().add(
@@ -210,7 +207,7 @@ class TimelineView extends StatelessWidget {
       builder: (dialogContext) {
         final usernameController = TextEditingController();
         final contentController = TextEditingController();
-        
+
         return AlertDialog(
           title: const Text('Create Post'),
           content: Column(
@@ -253,7 +250,7 @@ class TimelineView extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                if (usernameController.text.isNotEmpty && 
+                if (usernameController.text.isNotEmpty &&
                     contentController.text.isNotEmpty) {
                   final post = PostEntity(
                     id: '',
@@ -267,10 +264,10 @@ class TimelineView extends StatelessWidget {
                     reposts: 0,
                     bookmarks: 0,
                   );
-                  
+
                   context.read<TimelineBloc>().add(CreatePost(post: post));
                   Navigator.of(dialogContext).pop();
-                  
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Post created successfully!'),
@@ -284,7 +281,7 @@ class TimelineView extends StatelessWidget {
                   } else if (contentController.text.isEmpty) {
                     errorMessage = 'Please enter some content';
                   }
-                  
+
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
                       content: Text(errorMessage),
