@@ -1,4 +1,5 @@
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

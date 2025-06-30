@@ -1,5 +1,7 @@
 import 'package:atabei/components/appbar/appbar_widget.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
+import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_bloc.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
@@ -17,7 +19,7 @@ class TimelinePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider.value(value: context.read<AuthBloc>()),
+        BlocProvider.value(value: context.read<AuthBloc>()..add(AuthCheckRequested())),
         BlocProvider(
           create:
               (context) =>
@@ -91,6 +93,15 @@ class TimelineView extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          if (context.read<AuthBloc>().state is! AuthAuthenticated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please log in to create a post.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
           _showCreatePostDialog(context);
         },
         child: const Icon(Icons.add),
@@ -165,6 +176,7 @@ class TimelineView extends StatelessWidget {
       return RefreshIndicator(
         onRefresh: () async {
           context.read<TimelineBloc>().add(const RefreshTimeline());
+          context.read<AuthBloc>().add(AuthCheckRequested());
         },
         child: ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -180,16 +192,38 @@ class TimelineView extends StatelessWidget {
                     state is TimelinePostLiking &&
                     (state as TimelinePostLiking).postId == post.id,
                 onLike: () {
-                  const String currentUserId = 'current_user_id';
-                  context.read<TimelineBloc>().add(
-                    LikePost(postId: post.id, userId: currentUserId),
-                  );
+                  final userAuth = context.read<AuthBloc>().state;
+                  if (userAuth is! AuthAuthenticated) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please log in to like a post.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  } else {
+                    final user = userAuth.user;
+                    context.read<TimelineBloc>().add(
+                      LikePost(postId: post.id, userId: user.uid),
+                    );
+                  } 
                 },
                 onUnlike: () {
-                  const String currentUserId = 'current_user_id';
-                  context.read<TimelineBloc>().add(
-                    UnlikePost(postId: post.id, userId: currentUserId),
-                  );
+                  final userAuth = context.read<AuthBloc>().state;
+                  if (userAuth is! AuthAuthenticated) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please log in to unlike a post.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  } else {
+                    final user = userAuth.user;
+                    context.read<TimelineBloc>().add(
+                      UnlikePost(postId: post.id, userId: user.uid),
+                    );
+                  }
                 },
               ),
             );
@@ -205,7 +239,6 @@ class TimelineView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) {
-        final usernameController = TextEditingController();
         final contentController = TextEditingController();
 
         return AlertDialog(
@@ -213,15 +246,6 @@ class TimelineView extends StatelessWidget {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your username',
-                ),
-              ),
-              const SizedBox(height: 16),
               TextField(
                 controller: contentController,
                 decoration: const InputDecoration(
@@ -250,12 +274,12 @@ class TimelineView extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                if (usernameController.text.isNotEmpty &&
-                    contentController.text.isNotEmpty) {
+                final userAuth = context.read<AuthBloc>().state;
+                if (userAuth is AuthAuthenticated && contentController.text.isNotEmpty) {
                   final post = PostEntity(
                     id: '',
-                    userId: 123,
-                    username: usernameController.text.trim(),
+                    userId: userAuth.user.uid,
+                    username: userAuth.user.displayName,
                     content: contentController.text.trim(),
                     pathToProfilePicture: null,
                     dateOfPost: DateTime.now(),
@@ -276,9 +300,7 @@ class TimelineView extends StatelessWidget {
                   );
                 } else {
                   String errorMessage = '';
-                  if (usernameController.text.isEmpty) {
-                    errorMessage = 'Please enter a username';
-                  } else if (contentController.text.isEmpty) {
+                  if (contentController.text.isEmpty) {
                     errorMessage = 'Please enter some content';
                   }
 

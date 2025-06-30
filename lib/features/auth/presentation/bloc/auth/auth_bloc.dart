@@ -18,6 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignUpRequested>(_onAuthSignUpRequested);
     on<AuthSignOutRequested>(_onAuthSignOutRequested);
     on<StreamDataReceived>(_onStreamDataReceived);
+    on<AuthInitializeRequested>(_onAuthInitializeRequested);
     
     // Start listening to auth state changes
     _startAuthStateListener();
@@ -33,9 +34,42 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
       },
       onError: (error) {
+        print('Auth stream error: $error');
         add(StreamDataReceived(DataError(AuthException(message: error.toString()))));
       },
     );
+  }
+
+  void _onAuthInitializeRequested(
+    AuthInitializeRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    
+    print('🚀 Initializing app auth state...');
+    
+    final user = _authRepository.getCurrentUser();
+    if (user != null) {
+      try {
+        print('🔍 Verifying current user at startup...');
+        final userExists = await _authRepository.verifyCurrentUser();         
+        if (userExists) {
+          print('✅ User verified at startup');
+          emit(AuthAuthenticated(user: user));
+        } else {
+          print('❌ User no longer exists, cleaning up...');
+          await _authRepository.signOut();
+          emit(AuthUnauthenticated());
+        }
+      } catch (e) {
+        print('❌ Startup user verification failed: $e');
+        await _authRepository.signOut();
+        emit(AuthUnauthenticated());
+      }
+    } else {
+      print('ℹ️ No user at startup');
+      emit(AuthUnauthenticated());
+    }
   }
   
   void _onStreamDataReceived(StreamDataReceived event, Emitter<AuthState> emit) {
@@ -50,7 +84,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } else if (userState is DataError) {
       emit(AuthError(message: userState.error?.message ?? 'Unknown error'));
     }
-  }
+  }  
 
   void _onAuthCheckRequested(
     AuthCheckRequested event,
@@ -78,6 +112,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (result is DataSuccess) {
       // Don't emit here, let the stream handle it
       print('✅ Sign in successful');
+
+      emit(AuthAuthenticated(user: result.data!));
+
     } else if (result is DataError) {
       emit(AuthError(message: result.error?.message ?? 'Sign in failed'));
     }
@@ -89,16 +126,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     
+    print('📝 Attempting sign up...');
+    
     final result = await _authRepository.createUserWithEmailAndPassword(
       event.email,
       event.password,
-      event.displayName 
+      event.displayName,
     );
 
     if (result is DataSuccess) {
-      // Don't emit here, let the stream handle it
-      print('✅ Sign up successful');
+      print('✅ Sign up successful - letting stream handle state');
+      // Don't emit here either, let the stream handle it
+
+      emit(AuthAuthenticated(user: result.data!));
+
     } else if (result is DataError) {
+      print('❌ Sign up failed: ${result.error?.message}');
       emit(AuthError(message: result.error?.message ?? 'Sign up failed'));
     }
   }

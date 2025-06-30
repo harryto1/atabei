@@ -58,3 +58,10 @@ class StreamError extends AuthEvent {
   @override
   List<Object?> get props => [error];
 }
+
+class AuthInitializeRequested extends AuthEvent {
+  const AuthInitializeRequested();
+
+  @override
+  List<Object?> get props => [];
+}

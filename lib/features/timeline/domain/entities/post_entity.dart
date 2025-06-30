@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class PostEntity extends Equatable {
   final String id;
-  final int userId; 
+  final String userId; 
   final String username; 
   final String? pathToProfilePicture; 
   final DateTime dateOfPost; 

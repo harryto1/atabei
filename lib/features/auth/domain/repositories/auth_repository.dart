@@ -5,6 +5,7 @@ abstract class AuthRepository {
   Future<DataState<UserEntity>> signInWithEmailAndPassword(String email, String password);
   Future<DataState<UserEntity>> createUserWithEmailAndPassword(String email, String password, String displayName);
   Future<DataState<void>> signOut(); 
+  Future<bool> verifyCurrentUser(); 
   UserEntity? getCurrentUser();
   Stream<UserEntity?> get authStateChanges;
 }

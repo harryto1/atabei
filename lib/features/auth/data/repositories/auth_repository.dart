@@ -30,7 +30,7 @@ class AuthRepositoryImpl implements AuthRepository {
         // Update the user's display name
         await user.updateProfile(displayName: displayName);
         final userModel = UserModel.fromFirebaseUser(user);
-        return DataSuccess<UserEntity>(userModel);
+        return DataSuccess<UserEntity>(userModel as UserEntity);
       } else {
         return DataError(AuthException(message: "User creation failed"));
       }
@@ -78,4 +78,21 @@ class AuthRepositoryImpl implements AuthRepository {
       return DataError(AuthException(message: e.toString()));
     }
   } 
+
+  @override
+  Future<bool> verifyCurrentUser() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) return false;
+      
+      // Try to reload user data
+      await user.reload();
+      
+      // Check if user still exists
+      return _firebaseAuth.currentUser != null;
+    } catch (e) {
+      print('User verification failed: $e');
+      return false;
+    }
+  }
 }

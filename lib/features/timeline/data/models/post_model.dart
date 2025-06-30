@@ -20,7 +20,7 @@ class PostModel extends PostEntity {
 
     return PostModel(
       id: doc.id, // Firestore document ID is already a String
-      userId: data['userId'] as int,
+      userId: data['userId'] as String,
       username: data['username'] as String,
       pathToProfilePicture: data['pathToProfilePicture'] as String?,
       dateOfPost: _convertToDateTime(data['dateOfPost']),
@@ -66,7 +66,7 @@ class PostModel extends PostEntity {
 
   PostModel copyWith({
     String? id,
-    int? userId,
+    String? userId,
     String? username,
     String? pathToProfilePicture,
     DateTime? dateOfPost,
