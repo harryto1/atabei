@@ -19,7 +19,6 @@ class TimelinePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider.value(value: context.read<AuthBloc>()..add(AuthCheckRequested())),
         BlocProvider(
           create:
               (context) =>
