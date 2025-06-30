@@ -7,10 +7,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:atabei/dependencies.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await initializeDependencies();
   runApp(MyApp(appRouter: AppRouter()));
 }
 
@@ -22,8 +24,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AuthBloc(authRepository: AuthRepositoryImpl(firebaseAuth: FirebaseAuth.instance))..add(AuthInitializeRequested()),
+    return BlocProvider.value(
+      value: sl<AuthBloc>()..add(AuthInitializeRequested()),
       child: MaterialApp(
         title: 'Atabei',
         theme: AppTheme.lightTheme, 
