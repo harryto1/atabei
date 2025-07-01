@@ -271,17 +271,14 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       if (result is DataSuccess) {
         final createdPost = result.data!;
         print('✅ Post created: ${createdPost.id}');
-        
-        // Optimistically add the new post immediately
-        final updatedPosts = [createdPost, ..._currentPosts];
-        _currentPosts = updatedPosts.cast<PostEntity>();
-        
+
+        _currentPosts = _latestStreamPosts; 
+
         emit(TimelineLoaded(
-          posts: updatedPosts.cast<PostEntity>(),
-          hasNewPosts: false,
-          newPostsCount: 0,
-          isStreamActive: _postsStreamSubscription != null,
+          posts: _currentPosts,
+          isStreamActive: true,
         ));
+
         
       } else if (result is DataError) {
         print('❌ Post creation failed: ${result.error?.message}');

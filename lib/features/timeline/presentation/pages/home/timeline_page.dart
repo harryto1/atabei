@@ -10,7 +10,6 @@ import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_bloc.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_state.dart';
-import 'package:atabei/features/timeline/presentation/pages/post_detail/post_detail_page.dart';
 import 'package:atabei/features/timeline/presentation/widgets/post_widget.dart';
 import 'package:atabei/features/timeline/data/repositories/post_repository.dart';
 import 'package:atabei/config/theme/timeline_theme.dart';
