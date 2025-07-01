@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:atabei/components/appbar/appbar_widget.dart';
+import 'package:atabei/components/bottom_appbar/bottom_appbar_widget.dart';
+import 'package:atabei/components/drawer/drawer_widget.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
@@ -8,6 +10,7 @@ import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_bloc.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_state.dart';
+import 'package:atabei/features/timeline/presentation/pages/post_detail/post_detail_page.dart';
 import 'package:atabei/features/timeline/presentation/widgets/post_widget.dart';
 import 'package:atabei/features/timeline/data/repositories/post_repository.dart';
 import 'package:atabei/config/theme/timeline_theme.dart';
@@ -326,8 +329,11 @@ class TimelineView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawerScrimColor: Colors.black54,
+      drawer: drawerWidget(context), 
+      bottomNavigationBar: bottomAppBarWidget(context),
       backgroundColor: TimelineTheme.timelineBackgroundColor(context),
-      appBar: appBarWidget(),
+      appBar: appBarWidget(context),
       body: BlocConsumer<TimelineBloc, TimelineState>(
         listener: (context, state) {
           if (state is TimelineLoaded && state.error != null) {
@@ -476,6 +482,9 @@ class TimelineView extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 16),
               child: PostWidget(
                 post: post,
+                onTap: () {
+                  Navigator.pushNamed(context, '/post/${post.id}', arguments: post);
+                }, 
                 isLiking:
                     state is TimelinePostLiking &&
                     (state as TimelinePostLiking).postId == post.id,

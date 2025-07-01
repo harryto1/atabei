@@ -1,36 +1,50 @@
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
-import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-AppBar appBarWidget() {
+AppBar appBarWidget(BuildContext context) {
   return AppBar(
-    title: const Text('Atabei'),
+    title: Text('Atabei', style: Theme.of(context).appBarTheme.titleTextStyle), 
     centerTitle: true,
+    backgroundColor: Theme.of(context).colorScheme.primary,
+    actionsPadding: EdgeInsets.symmetric(horizontal: 16), 
+    leading: Builder(
+      builder: (context) {
+        return IconButton(
+          icon: Icon(Icons.menu, color: Theme.of(context).colorScheme.onPrimary),
+          onPressed: () {
+            Scaffold.of(context).openDrawer(); 
+          },
+        );
+      },
+    ), 
     actions: [
       BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is AuthAuthenticated) {
-            return TextButton(
-              onPressed: () {
-                // Navigate to profile page
+            return GestureDetector(
+              onTap:() {
                 Navigator.pushNamed(context, '/profile');
               },
-              child: Text(
-                state.user.displayName,
-                style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-              ),
-            );
+              child: CircleAvatar(
+                    radius: 20,
+                    backgroundImage: state.user.pathToProfilePicture != null
+                        ? NetworkImage(state.user.pathToProfilePicture!)
+                        : null,
+                    child: state.user.pathToProfilePicture == null
+                        ? Text(state.user.displayName.substring(0, 1).toUpperCase())
+                        : null,
+                  ),
+            ); 
           } else {
             return TextButton(
               onPressed: () {
-                // Navigate to login page
                 Navigator.pushNamed(context, '/login');
               },
-              child: const Text(
+              child: Text(
                 'Login',
-                style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 16, fontWeight: FontWeight.w500),
               ),
             );
           }

@@ -9,6 +9,7 @@ class PostWidget extends StatelessWidget {
   final PostEntity post;
   final Function()? onLike;
   final Function()? onUnlike;
+  final Function()? onTap; 
   final bool isLiking;
 
   const PostWidget({
@@ -16,215 +17,219 @@ class PostWidget extends StatelessWidget {
     required this.post,
     this.onLike,
     this.onUnlike,
+    this.onTap, 
     this.isLiking = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: TimelineTheme.timelineCardDecoration(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Post header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: post.pathToProfilePicture != null
-                      ? NetworkImage(post.pathToProfilePicture!)
-                      : null,
-                  child: post.pathToProfilePicture == null
-                      ? Text(post.username.substring(0, 1).toUpperCase())
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        post.username,
-                        style: TimelineTheme.timelineTitleStyle(context),
-                      ),
-                      Text(
-                        timeago.format(post.dateOfPost),
-                        style: TimelineTheme.timelineTimestampStyle(context),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: () {
-                    // Show post options
-                    _showPostOptions(context);
-                  },
-                ),
-              ],
-            ),
-          ),
-          
-          // Post content - Now using the actual content property
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Display the actual post content
-                Text(
-                  post.content,
-                  style: TimelineTheme.timelineSubtitleStyle(context).copyWith(
-                    fontSize: 15,
-                    height: 1.4,
-                  ),
-                ),
-                if (post.pathToImage != null && post.pathToImage?.substring(0, 4) == 'http') 
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Image.network(
-                      post.pathToImage!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: 200,
-                      errorBuilder: (context, error, stackTrace) => 
-                        const Text('Image not available'),
+    return GestureDetector(
+      onTap: onTap, 
+      child: Container(
+        decoration: TimelineTheme.timelineCardDecoration(context),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Post header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: post.pathToProfilePicture != null
+                          ? NetworkImage(post.pathToProfilePicture!)
+                          : null,
+                      child: post.pathToProfilePicture == null
+                          ? Text(post.username.substring(0, 1).toUpperCase())
+                          : null,
                     ),
-                  ),
-                if (post.pathToImage != null && post.pathToImage?.substring(0, 4) != 'http') 
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Image.file(
-                      File(post.pathToImage!),
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: 200,
-                      errorBuilder: (context, error, stackTrace) => 
-                        const Text('Image not available'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            post.username,
+                            style: TimelineTheme.timelineTitleStyle(context),
+                          ),
+                          Text(
+                            timeago.format(post.dateOfPost),
+                            style: TimelineTheme.timelineTimestampStyle(context),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                const SizedBox(height: 8),
-                // Optional: Show post timestamp
-                Text(
-                  '${_formatDate(post.dateOfPost)} at ${_formatTime(post.dateOfPost)}',
-                  style: TimelineTheme.timelineTimestampStyle(context).copyWith(
-                    fontSize: 12,
-                  ),
+                    IconButton(
+                      icon: const Icon(Icons.more_vert),
+                      onPressed: () {
+                        // Show post options
+                        _showPostOptions(context);
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // Post actions
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Like button
-                InkWell(
-                  onTap: isLiking ? null : () {
-                    onLike?.call();
-                  },
-                  child: Row(
-                    children: [
-                      if (isLiking)
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      else
-                        Icon(
-                          Icons.favorite_border,
-                          color: TimelineTheme.timelineIconColor(context),
-                          size: 20,
+              ),
+              
+              // Post content - Now using the actual content property
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Display the actual post content
+                    Text(
+                      post.content,
+                      style: TimelineTheme.timelineSubtitleStyle(context).copyWith(
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+                    if (post.pathToImage != null && post.pathToImage?.substring(0, 4) == 'http') 
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Image.network(
+                          post.pathToImage!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: 200,
+                          errorBuilder: (context, error, stackTrace) => 
+                            const Text('Image not available'),
                         ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${post.likes}',
-                        style: TimelineTheme.timelineTimestampStyle(context),
                       ),
-                    ],
-                  ),
+                    if (post.pathToImage != null && post.pathToImage?.substring(0, 4) != 'http') 
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Image.file(
+                          File(post.pathToImage!),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: 200,
+                          errorBuilder: (context, error, stackTrace) => 
+                            const Text('Image not available'),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    // Optional: Show post timestamp
+                    Text(
+                      '${_formatDate(post.dateOfPost)} at ${_formatTime(post.dateOfPost)}',
+                      style: TimelineTheme.timelineTimestampStyle(context).copyWith(
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-                
-                const SizedBox(width: 24),
-                
-                // Comment button
-                InkWell(
-                  onTap: () {
-                    _navigateToComments(context);
-                  },
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        color: TimelineTheme.timelineIconColor(context),
-                        size: 20,
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Post actions
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Like button
+                    InkWell(
+                      onTap: isLiking ? null : () {
+                        onLike?.call();
+                      },
+                      child: Row(
+                        children: [
+                          if (isLiking)
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          else
+                            Icon(
+                              Icons.favorite_border,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${post.likes}',
+                            style: TimelineTheme.timelineTimestampStyle(context),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${post.comments}',
-                        style: TimelineTheme.timelineTimestampStyle(context),
+                    ),
+                    
+                    const SizedBox(width: 24),
+                    
+                    // Comment button
+                    InkWell(
+                      onTap: () {
+                        _navigateToComments(context);
+                      },
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            color: TimelineTheme.timelineIconColor(context),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${post.comments}',
+                            style: TimelineTheme.timelineTimestampStyle(context),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    
+                    const SizedBox(width: 24),
+                    
+                    // Repost button
+                    InkWell(
+                      onTap: () {
+                        _handleRepost(context);
+                      },
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.repeat,
+                            color: TimelineTheme.timelineIconColor(context),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${post.reposts}',
+                            style: TimelineTheme.timelineTimestampStyle(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const Spacer(),
+                    
+                    // Bookmark button
+                    InkWell(
+                      onTap: () {
+                        _handleBookmark(context);
+                      },
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.bookmark_border,
+                            color: TimelineTheme.timelineIconColor(context),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${post.bookmarks}',
+                            style: TimelineTheme.timelineTimestampStyle(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                
-                const SizedBox(width: 24),
-                
-                // Repost button
-                InkWell(
-                  onTap: () {
-                    _handleRepost(context);
-                  },
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.repeat,
-                        color: TimelineTheme.timelineIconColor(context),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${post.reposts}',
-                        style: TimelineTheme.timelineTimestampStyle(context),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const Spacer(),
-                
-                // Bookmark button
-                InkWell(
-                  onTap: () {
-                    _handleBookmark(context);
-                  },
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.bookmark_border,
-                        color: TimelineTheme.timelineIconColor(context),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${post.bookmarks}',
-                        style: TimelineTheme.timelineTimestampStyle(context),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
     );
   }
 

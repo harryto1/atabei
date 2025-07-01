@@ -12,7 +12,7 @@ class AppTheme {
   static const Color warningColor = Color(0xFFF59E0B);
   
   // Text Colors
-  static const Color textPrimary = Color(0xFF1F2937);
+  static const Color textPrimary = Color.fromARGB(255, 255, 255, 255);
   static const Color textSecondary = Color(0xFF6B7280);
   static const Color textTertiary = Color(0xFF9CA3AF);
   
@@ -31,7 +31,7 @@ class AppTheme {
       backgroundColor: Colors.transparent,
       foregroundColor: textPrimary,
       titleTextStyle: TextStyle(
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: FontWeight.w600,
         color: textPrimary,
       ),
@@ -91,7 +91,7 @@ class AppTheme {
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
       titleTextStyle: TextStyle(
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: FontWeight.w600,
         color: Colors.white,
       ),

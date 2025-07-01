@@ -1,10 +1,12 @@
 import 'package:atabei/core/util/not_found_page.dart';
 import 'package:atabei/features/auth/presentation/pages/auth_page.dart';
+import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:atabei/features/timeline/presentation/pages/home/timeline_page.dart';
+import 'package:atabei/features/timeline/presentation/pages/post_detail/post_detail_page.dart';
 import 'package:flutter/material.dart';
 
 class AppRouter {
-  // Define your routes here
+  // Routes
   static const String home = '/';
   static const String login = '/login'; 
 
@@ -16,7 +18,17 @@ class AppRouter {
       case login: 
         return MaterialPageRoute(builder: (_) => AuthPage()); 
       default:
-        return MaterialPageRoute(builder: (_) => NotFoundPage());
+        // Handle dynamic routes like /post/123
+        if (settings.name?.startsWith('/post/') == true) {
+          if (settings.arguments is PostEntity) {
+            return MaterialPageRoute(
+              builder: (_) => PostDetailPage(post: settings.arguments as PostEntity),
+              settings: settings,
+            );
+          }
+        }
+        
+        return MaterialPageRoute(builder: (_) => const NotFoundPage());
     }
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
 
-class TimelineTheme {
+class TimelineTheme extends AppTheme {
   static const Color timelineAccent = Color(0xFF3B82F6);
   static const Color timelineBackground = Color(0xFFF1F5F9);
   static const Color darkTimelineBackground = Color(0xFF111827);
