@@ -78,6 +78,16 @@ class CreatePost extends TimelineEvent {
   List<Object?> get props => [post];
 }
 
+class DeletePost extends TimelineEvent {
+  final String postId; 
+  final File? imageFile; 
+
+  const DeletePost({required this.postId, this.imageFile});
+
+  @override
+  List<Object?> get props => [postId, imageFile];
+}
+
 class RefreshTimeline extends TimelineEvent {
   final int limit;
   

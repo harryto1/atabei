@@ -47,9 +47,19 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
-  Future<DataState> deletePost(String postId) {
-    // TODO: implement deletePost
-    throw UnimplementedError();
+  Future<DataState<void>> deletePost(String postId) async {
+    try {
+      // Delete the post document from Firestore
+      await _firestore
+          .collection(_postsCollection)
+          .doc(postId)
+          .delete();
+      return DataSuccess<void>(null);
+    } on FirebaseException catch (e) {
+      return DataError(FirestoreException.fromFirebaseException(e));
+    } catch (e) {
+      return DataError(FirestoreException(message: e.toString()));
+    }
   }
 
   @override

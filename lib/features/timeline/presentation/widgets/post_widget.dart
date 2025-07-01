@@ -1,12 +1,18 @@
 import 'dart:io';
 
 import 'package:atabei/config/theme/timeline_theme.dart';
+import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
+import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_bloc.dart';
+import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PostWidget extends StatelessWidget {
   final PostEntity post;
+  final TimelineBloc timelineBloc; 
   final Function()? onLike;
   final Function()? onUnlike;
   final Function()? onTap; 
@@ -14,6 +20,7 @@ class PostWidget extends StatelessWidget {
 
   const PostWidget({
     super.key,
+    required this.timelineBloc,
     required this.post,
     this.onLike,
     this.onUnlike,
@@ -273,6 +280,23 @@ class PostWidget extends StatelessWidget {
                 // Handle share
               },
             ),
+            BlocBuilder<AuthBloc, AuthState>(
+              builder:(context, state) {
+                if (state is AuthAuthenticated) {
+                  return ListTile(
+                    leading: const Icon(Icons.delete),
+                    title: const Text('Delete Post'),
+                    onTap: () {
+                      timelineBloc.add(
+                        DeletePost(postId: post.id, imageFile: post.pathToImage != null && post.pathToImage!.substring(0, 4) != 'http' ? File(post.pathToImage!) : null),
+                      ); 
+                      Navigator.pop(context);
+                    },
+                  );
+                }
+                return const SizedBox.shrink(); // Hide delete option if not authenticated
+              },
+            )
           ],
         ),
       ),

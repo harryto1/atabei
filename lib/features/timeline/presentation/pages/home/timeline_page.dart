@@ -403,7 +403,7 @@ class TimelineView extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, TimelineState state) {
-    if (state is TimelineLoading) {
+    if (state is TimelineLoading || state is TimelinePostDeleting || state is TimelinePostCreating) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -481,6 +481,7 @@ class TimelineView extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 16),
               child: PostWidget(
                 post: post,
+                timelineBloc: context.read<TimelineBloc>(),
                 onTap: () {
                   Navigator.pushNamed(context, '/post/${post.id}', arguments: post);
                 }, 

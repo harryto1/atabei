@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:equatable/equatable.dart';
 
@@ -82,4 +84,17 @@ class TimelinePostCreating extends TimelineState {
 
   @override
   List<Object?> get props => [posts];
+}
+
+class TimelinePostDeleting extends TimelineState {
+  final String postId; 
+  final File? imageFile; 
+
+  const TimelinePostDeleting({
+    required this.postId,
+    this.imageFile,
+  });
+
+  @override
+  List<Object?> get props => [postId, imageFile];
 }

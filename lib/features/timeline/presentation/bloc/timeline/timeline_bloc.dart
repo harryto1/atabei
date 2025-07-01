@@ -25,6 +25,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     on<LikePost>(_onLikePost);
     on<UnlikePost>(_onUnlikePost);
     on<CreatePost>(_onCreatePost);
+    on<DeletePost>(_onDeletePost);
     on<LoadTimelinePosts>(_onLoadTimelinePosts);
     on<StreamDataReceived>(_onStreamDataReceived); 
   }
@@ -324,6 +325,65 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       } else if (result is DataError) {
         emit(TimelineError(
           message: result.error?.message ?? 'Failed to load posts',
+        ));
+      }
+    }
+  }
+
+  void _onDeletePost(
+    DeletePost event,
+    Emitter<TimelineState> emit,
+  ) async {
+    if (state is TimelineLoaded) {
+      final currentState = state as TimelineLoaded;
+      emit(TimelinePostDeleting(postId: event.postId, imageFile: event.imageFile));
+      print('🗑️ Deleting post with ID: ${event.postId}');
+
+      try {
+        // Delete the post from the repository
+        final result1 = await _postsRepository.deletePost(event.postId);
+
+        if (result1 is DataError) {
+          emit(currentState.copyWith(
+            error: result1.error?.message ?? 'Failed to delete post',
+          ));
+          return; // Exit early if post deletion fails
+        } else if (result1 is DataSuccess) {
+          print('✅ Post deleted successfully');
+        }
+
+        if (event.imageFile == null) {
+          print('No image file provided, skipping local deletion');
+          // Remove the post from the current posts list
+          _currentPosts.removeWhere((post) => post.id == event.postId);
+          emit(currentState.copyWith(
+            posts: _currentPosts,
+            isStreamActive: true,
+          ));
+          return;
+        }
+
+        final result2 = await _localImageRepository.deletePostImage(event.imageFile?.path ?? '');
+
+        if (result2 is DataError) {
+          print('❌ Local image deletion failed: ${result2.error?.message}');
+        } else {
+          print('✅ Local image deleted successfully');
+        }
+        
+        // Remove the post from the current posts list
+        _currentPosts.removeWhere((post) => post.id == event.postId);
+
+        print('📝 Updated current posts after deletion: ${_currentPosts.length} posts remaining');
+        
+        // Emit updated state
+        emit(currentState.copyWith(
+          posts: _currentPosts,
+          isStreamActive: true,
+        ));
+      } catch (e) {
+        emit(currentState.copyWith(
+          error: e.toString(),
         ));
       }
     }
