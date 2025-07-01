@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:atabei/config/theme/timeline_theme.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:flutter/material.dart';
@@ -79,6 +81,30 @@ class PostWidget extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
+                if (post.pathToImage != null && post.pathToImage?.substring(0, 4) == 'http') 
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Image.network(
+                      post.pathToImage!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: 200,
+                      errorBuilder: (context, error, stackTrace) => 
+                        const Text('Image not available'),
+                    ),
+                  ),
+                if (post.pathToImage != null && post.pathToImage?.substring(0, 4) != 'http') 
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Image.file(
+                      File(post.pathToImage!),
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: 200,
+                      errorBuilder: (context, error, stackTrace) => 
+                        const Text('Image not available'),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 // Optional: Show post timestamp
                 Text(

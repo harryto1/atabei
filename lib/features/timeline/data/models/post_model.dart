@@ -7,6 +7,7 @@ class PostModel extends PostEntity {
     required super.userId,
     required super.username,
     super.pathToProfilePicture,
+    super.pathToImage, 
     required super.dateOfPost,
     required super.likes,
     required super.comments,
@@ -23,6 +24,7 @@ class PostModel extends PostEntity {
       userId: data['userId'] as String,
       username: data['username'] as String,
       pathToProfilePicture: data['pathToProfilePicture'] as String?,
+      pathToImage: data['pathToImage'] as String?, 
       dateOfPost: _convertToDateTime(data['dateOfPost']),
       likes: data['likes'] as int? ?? 0,
       comments: data['comments'] as int? ?? 0,
@@ -55,6 +57,7 @@ class PostModel extends PostEntity {
       'userId': userId,
       'username': username,
       'pathToProfilePicture': pathToProfilePicture,
+      'pathToImage': pathToImage,
       'dateOfPost': Timestamp.fromDate(dateOfPost),
       'likes': likes,
       'comments': comments,
@@ -64,11 +67,13 @@ class PostModel extends PostEntity {
     };
   }
 
+  @override
   PostModel copyWith({
     String? id,
     String? userId,
     String? username,
     String? pathToProfilePicture,
+    String? pathToImage,
     DateTime? dateOfPost,
     int? likes,
     int? comments,
@@ -81,6 +86,7 @@ class PostModel extends PostEntity {
       userId: userId ?? this.userId,
       username: username ?? this.username,
       pathToProfilePicture: pathToProfilePicture ?? this.pathToProfilePicture,
+      pathToImage: pathToImage ?? this.pathToImage,
       dateOfPost: dateOfPost ?? this.dateOfPost,
       likes: likes ?? this.likes,
       comments: comments ?? this.comments,

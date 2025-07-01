@@ -27,3 +27,14 @@ class AuthException<T> extends DioException {
   @override
   DioExceptionType get type => DioExceptionType.unknown;
 }
+
+class ImageException<T> extends DioException {
+  ImageException({required String super.message, super.stackTrace})
+      : super(
+          requestOptions: RequestOptions(path: ''),
+          type: DioExceptionType.unknown,
+        );
+
+  @override
+  DioExceptionType get type => DioExceptionType.unknown;
+}

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:atabei/core/resources/data_state.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:equatable/equatable.dart';
@@ -68,8 +70,9 @@ class UnlikePost extends TimelineEvent {
 
 class CreatePost extends TimelineEvent {
   final PostEntity post;
+  final File? imageFile; 
   
-  const CreatePost({required this.post});
+  const CreatePost({required this.post, this.imageFile});
 
   @override
   List<Object?> get props => [post];

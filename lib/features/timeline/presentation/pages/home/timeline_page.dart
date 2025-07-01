@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:atabei/components/appbar/appbar_widget.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
+import 'package:atabei/features/timeline/data/repositories/local_image_repository.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_bloc.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
@@ -11,28 +13,315 @@ import 'package:atabei/features/timeline/data/repositories/post_repository.dart'
 import 'package:atabei/config/theme/timeline_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-class TimelinePage extends StatelessWidget {
+class TimelinePage extends StatefulWidget {
   const TimelinePage({super.key});
 
   @override
+  State<TimelinePage> createState() => _TimelinePageState();
+}
+
+class _TimelinePageState extends State<TimelinePage> {
+  File? selectedImage;
+  final TextEditingController contentController = TextEditingController();
+  late TimelineBloc timelineBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    timelineBloc = TimelineBloc(
+      postsRepository: PostRepositoryImpl(),
+      localImageRepository: LocalImageRepositoryImpl(),
+    )..add(const StartTimelineStream());
+  }
+
+  @override
+  void dispose() {
+    contentController.dispose();
+    timelineBloc.close(); 
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create:
-              (context) =>
-                  TimelineBloc(postsRepository: PostRepositoryImpl())
-                    ..add(const StartTimelineStream()),
-        ),
-      ],
-      child: const TimelineView(),
+    return BlocProvider.value(
+      value: timelineBloc, 
+      child: TimelineView(onCreatePost: () => _showCreatePostDialog(context)),
     );
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      if (await Permission.photos.request().isDenied) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please allow photo access to pick an image')),
+        );
+        return;
+      }
+
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        setState(() {
+          selectedImage = File(image.path);
+        });
+        print('✅ Image selected: ${image.path}');
+      }
+    } catch (e) {
+      print('❌ Error picking image: $e');
+    }
+  }
+
+  void _showCreatePostDialog(BuildContext context) {
+    // Reset state
+    contentController.clear();
+    selectedImage = null;
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (builderContext, setDialogState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                constraints: const BoxConstraints(
+                  maxWidth: 400, 
+                  maxHeight: 600,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.create,
+                          color: Theme.of(context).primaryColor,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Create Post',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 20),
+                    
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: TextField(
+                                controller: contentController,
+                                decoration: const InputDecoration(
+                                  hintText: 'What\'s on your mind?',
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.all(16),
+                                ),
+                                maxLines: 3,
+                                maxLength: 280,
+                              ),
+                            ),
+                            
+                            const SizedBox(height: 16),
+                            
+                            if (selectedImage != null) ...[
+                              Stack(
+                                children: [
+                                  Container(
+                                    height: 120, 
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: Colors.grey.shade300),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.file(
+                                        selectedImage!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.black54,
+                                      radius: 16,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          selectedImage = null;
+                                          setDialogState(() {});
+                                        },
+                                        icon: const Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                            
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () async {
+                                      await _pickImage();
+                                      setDialogState(() {});
+                                    },
+                                    icon: const Icon(Icons.photo_library, size: 18),
+                                    label: const Text('Gallery'),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () async {
+                                      await _pickImageFromCamera();
+                                      setDialogState(() {});
+                                    },
+                                    icon: const Icon(Icons.camera_alt, size: 18),
+                                    label: const Text('Camera'),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 20),
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (contentController.text.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Please enter some text')),
+                                );
+                                return;
+                              }
+
+                              final userAuth = context.read<AuthBloc>().state;
+                              if (userAuth is AuthAuthenticated) {
+                                final post = PostEntity(
+                                  id: '',
+                                  userId: userAuth.user.uid,
+                                  username: userAuth.user.displayName,
+                                  content: contentController.text.trim(),
+                                  pathToProfilePicture: null,
+                                  pathToImage: selectedImage?.path,
+                                  dateOfPost: DateTime.now(),
+                                  likes: 0,
+                                  comments: 0,
+                                  reposts: 0,
+                                  bookmarks: 0,
+                                );
+
+                                timelineBloc.add(
+                                  CreatePost(post: post, imageFile: selectedImage),
+                                );
+                                
+                                Navigator.of(dialogContext).pop();
+                              }
+                            },
+                            child: const Text('Post'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      if (await Permission.camera.request().isDenied) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please allow camera access to take a photo')),
+        );
+        return;
+      }
+
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        setState(() {
+          selectedImage = File(image.path);
+        });
+        print('✅ Photo taken: ${image.path}');
+      }
+    } catch (e) {
+      print('❌ Error taking photo: $e');
+    }
   }
 }
 
 class TimelineView extends StatelessWidget {
-  const TimelineView({super.key});
+  final VoidCallback? onCreatePost;
+  
+  const TimelineView({super.key, this.onCreatePost});
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +390,7 @@ class TimelineView extends StatelessWidget {
             );
             return;
           }
-          _showCreatePostDialog(context);
+          onCreatePost?.call(); // Call the parent's dialog function
         },
         child: const Icon(Icons.add),
       ),
@@ -233,89 +522,4 @@ class TimelineView extends StatelessWidget {
 
     return const SizedBox.shrink();
   }
-
-  void _showCreatePostDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        final contentController = TextEditingController();
-
-        return AlertDialog(
-          title: const Text('Create Post'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: contentController,
-                decoration: const InputDecoration(
-                  labelText: 'What\'s on your mind?',
-                  border: OutlineInputBorder(),
-                  hintText: 'Share your thoughts...',
-                ),
-                maxLines: 3,
-                maxLength: 280,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Note: This is a simple demo. In a real app, username would come from authentication.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final userAuth = context.read<AuthBloc>().state;
-                if (userAuth is AuthAuthenticated && contentController.text.isNotEmpty) {
-                  final post = PostEntity(
-                    id: '',
-                    userId: userAuth.user.uid,
-                    username: userAuth.user.displayName,
-                    content: contentController.text.trim(),
-                    pathToProfilePicture: null,
-                    dateOfPost: DateTime.now(),
-                    likes: 0,
-                    comments: 0,
-                    reposts: 0,
-                    bookmarks: 0,
-                  );
-
-                  context.read<TimelineBloc>().add(CreatePost(post: post));
-                  Navigator.of(dialogContext).pop();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Post created successfully!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                } else {
-                  String errorMessage = '';
-                  if (contentController.text.isEmpty) {
-                    errorMessage = 'Please enter some content';
-                  }
-
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(
-                      content: Text(errorMessage),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: const Text('Post'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
+} 

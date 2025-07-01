@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
+import 'package:atabei/features/timeline/domain/repositories/local_image_repository.dart';
 import 'package:atabei/features/timeline/domain/repositories/post_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atabei/core/resources/data_state.dart';
@@ -8,12 +9,14 @@ import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_sta
 
 class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
   final PostRepository _postsRepository;
+  final LocalImageRepository _localImageRepository; 
   StreamSubscription? _postsStreamSubscription;
   List<PostEntity> _currentPosts = [];
   List<PostEntity> _latestStreamPosts = [];
 
-  TimelineBloc({required PostRepository postsRepository})
-      : _postsRepository = postsRepository,
+  TimelineBloc({required PostRepository postsRepository, required LocalImageRepository localImageRepository})
+      : _postsRepository = postsRepository, 
+        _localImageRepository = localImageRepository, 
         super(TimelineInitial()) {
     
     on<StartTimelineStream>(_onStartTimelineStream);
@@ -247,7 +250,23 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       final currentState = state as TimelineLoaded;
       emit(TimelinePostCreating(posts: currentState.posts));
 
-      final result = await _postsRepository.createPost(event.post);
+      var eventPost = event.post; 
+
+      if (event.imageFile != null) {
+        final imageResult = await _localImageRepository.uploadPostImage(event.imageFile!, event.post.id);
+        if (imageResult is DataSuccess) {
+          // Update the post with the image path
+          eventPost = event.post.copyWith(pathToImage: imageResult.data);
+        } else if (imageResult is DataError) {
+          print('❌ Image upload failed: ${imageResult.error?.message}');
+          emit(currentState.copyWith(
+            error: imageResult.error?.message ?? 'Failed to upload image',
+          ));
+          return; // Exit early if image upload fails
+        }
+      }
+    
+      final result = await _postsRepository.createPost(eventPost);
       
       if (result is DataSuccess) {
         final createdPost = result.data!;
