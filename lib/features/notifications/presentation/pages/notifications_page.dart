@@ -1,7 +1,6 @@
 import 'package:atabei/features/notifications/presentation/pages/widgets/notification_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:atabei/components/appbar/appbar_widget.dart';
 import 'package:atabei/components/bottom_appbar/bottom_appbar_widget.dart';
 import 'package:atabei/components/drawer/drawer_widget.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
@@ -92,20 +91,17 @@ class NotificationsView extends StatelessWidget {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(100),
         child: AppBar(
-          backgroundColor: TimelineTheme.timelineBackgroundColor(context),
+          backgroundColor: Theme.of(context).colorScheme.primary,
           elevation: 0,
-          title: const Text(
+          title: Text(
             'Notifications',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
+            style: Theme.of(context).appBarTheme.titleTextStyle,
           ),
-          centerTitle: false,
+          centerTitle: true,
           bottom: TabBar(
             controller: tabController,
-            indicatorColor: Theme.of(context).primaryColor,
-            labelColor: Theme.of(context).primaryColor,
+            indicatorColor: Theme.of(context).colorScheme.onPrimary,
+            labelColor: Theme.of(context).colorScheme.onPrimary,
             unselectedLabelColor: Colors.grey,
             tabs: const [
               Tab(text: 'All'),

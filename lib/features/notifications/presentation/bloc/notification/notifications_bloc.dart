@@ -226,4 +226,10 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     }
   }
 
+  @override
+  Future<void> close() {
+    _notificationsStreamSubscription?.cancel();
+    return super.close();
+  }
+
 }
