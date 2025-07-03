@@ -159,11 +159,12 @@ class PostRepositoryImpl implements PostRepository {
   }
   
   @override
-  likePost(String postId, String userId) async {
+  likePost(String postId, String userId, String username) async {
     try {
       await _firestore.collection('likes').add({
         'postId': postId,
         'userId': userId,
+        'username': username,
         'timestamp': FieldValue.serverTimestamp(),
       }); 
 

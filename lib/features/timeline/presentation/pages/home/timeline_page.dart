@@ -501,7 +501,7 @@ class TimelineView extends StatelessWidget {
                   } else {
                     final user = userAuth.user;
                     context.read<TimelineBloc>().add(
-                      LikePost(postId: post.id, userId: user.uid),
+                      LikePost(postId: post.id, userId: user.uid, username: user.displayName),
                     );
                   } 
                 },

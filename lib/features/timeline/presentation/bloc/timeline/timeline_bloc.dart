@@ -202,7 +202,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     if (state is TimelineLoaded) {
       final currentState = state as TimelineLoaded;
 
-      final result = await _postsRepository.likePost(event.postId, event.userId);
+      final result = await _postsRepository.likePost(event.postId, event.userId, event.username);
       
       if (result is DataSuccess) {
         // Update will come through the stream

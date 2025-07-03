@@ -45,10 +45,12 @@ class LoadNewPosts extends TimelineEvent {
 class LikePost extends TimelineEvent {
   final String postId;
   final String userId;
+  final String username; 
   
   const LikePost({
     required this.postId,
     required this.userId,
+    required this.username, 
   });
 
   @override

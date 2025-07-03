@@ -11,7 +11,7 @@ BottomAppBar bottomAppBarWidget(BuildContext context) {
               icon: const Icon(Icons.home),
               color: Theme.of(context).colorScheme.onPrimary,
               onPressed: () {
-                // Handle home button press
+                Navigator.pushReplacementNamed(context, '/'); 
               },
             ),
             IconButton(
@@ -26,6 +26,7 @@ BottomAppBar bottomAppBarWidget(BuildContext context) {
               color: Theme.of(context).colorScheme.onPrimary,
               onPressed: () {
                 // Handle notifications button press
+                Navigator.pushReplacementNamed(context, '/notifications');
               },
             ),
             IconButton(
