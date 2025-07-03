@@ -159,9 +159,24 @@ class PostRepositoryImpl implements PostRepository {
   }
   
   @override
-  likePost(String postId, String userId) {
-    // TODO: implement likePost
-    throw UnimplementedError();
+  likePost(String postId, String userId) async {
+    try {
+      await _firestore.collection('likes').add({
+        'postId': postId,
+        'userId': userId,
+        'timestamp': FieldValue.serverTimestamp(),
+      }); 
+
+      await _firestore.collection(_postsCollection).doc(postId).update({
+        'likes': FieldValue.increment(1), 
+      });
+      
+      print('✅ Like added for post: $postId');
+      return DataSuccess<void>(null);
+    } catch (e) {
+      print('❌ Failed to like post: $e');
+      throw FirestoreException(message: 'Failed to like post: $e');
+    }
   }
   
   @override

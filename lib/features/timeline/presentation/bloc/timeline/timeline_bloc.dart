@@ -201,16 +201,11 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
   ) async {
     if (state is TimelineLoaded) {
       final currentState = state as TimelineLoaded;
-      emit(TimelinePostLiking(
-        postId: event.postId,
-        posts: currentState.posts,
-      ));
 
       final result = await _postsRepository.likePost(event.postId, event.userId);
       
       if (result is DataSuccess) {
         // Update will come through the stream
-        emit(currentState);
       } else if (result is DataError) {
         emit(currentState.copyWith(
           error: result.error?.message ?? 'Failed to like post',

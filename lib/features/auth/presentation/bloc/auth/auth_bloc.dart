@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:atabei/core/resources/data_state.dart';
+import 'package:atabei/core/services/notification_service.dart';
 import 'package:atabei/features/auth/domain/entities/user_entity.dart';
 import 'package:atabei/features/auth/domain/repositories/auth_repository.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
@@ -112,6 +113,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (result is DataSuccess) {
       // Don't emit here, let the stream handle it
       print('✅ Sign in successful');
+
+      NotificationService.saveFcmToken().then((_) {
+        print('✅ FCM token saved successfully');
+      }).catchError((error) {
+        print('❌ Failed to save FCM token: $error');
+      });
 
       emit(AuthAuthenticated(user: result.data!));
 

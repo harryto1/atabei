@@ -35,11 +35,13 @@ dependencies:
   equatable: ^2.0.7
   firebase_auth: ^5.6.0
   firebase_core: ^3.14.0
+  firebase_messaging: ^15.2.8
   floor: ^1.5.0
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
   flutter_hooks: ^0.21.2
+  flutter_local_notifications: ^19.3.0
   get_it: ^8.0.3
   image_picker: ^1.1.2
   intl: ^0.20.2

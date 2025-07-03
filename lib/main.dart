@@ -1,16 +1,20 @@
 import 'package:atabei/config/routes/app_router.dart';
 import 'package:atabei/config/theme/app_theme.dart';
 import 'package:atabei/features/auth/data/repositories/auth_repository.dart';
+import 'package:atabei/core/services/notification_service.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await NotificationService.initialize();
+  FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
   runApp(MyApp(appRouter: AppRouter()));
 }
 
@@ -34,4 +38,8 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _handleBackgroundMessage(RemoteMessage message) async {
+  print('🔔 Background message: ${message.notification?.title}, ${message.notification?.body}');
 }

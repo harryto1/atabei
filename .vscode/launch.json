@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "atabei-emulator1",
+      "type": "dart",
+      "request": "launch",
+      "deviceId": "emulator-5554",
+      "program": "lib/main.dart",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "atabei-emulator2",
+      "type": "dart",
+      "request": "launch",
+      "deviceId": "emulator-5556",
+      "program": "lib/main.dart",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "atabei-all",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "preLaunchTask": "flutter-run-all"
+    }
+  ]
+}

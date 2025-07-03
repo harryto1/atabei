@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "flutter-run-emulator1",
+      "type": "shell",
+      "command": "flutter run -d emulator-5554",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "flutter-run-emulator2",
+      "type": "shell",
+      "command": "flutter run -d emulator-5556",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "flutter-run-all",
+      "dependsOn": ["flutter-run-emulator1", "flutter-run-emulator2"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}
