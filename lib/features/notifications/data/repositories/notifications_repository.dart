@@ -39,6 +39,7 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
       yield* _firestore
           .collection(_likesCollection)
           .where('postId', whereIn: postIds)
+          .where('userId', isNotEqualTo: userId) // Exclude likes by the user themselves
           .orderBy('timestamp', descending: true)
           .snapshots()
           .map<DataState<List<LikesEntity>>>((querySnapshot) {
@@ -80,6 +81,7 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
       final likesQuery = await _firestore
           .collection(_likesCollection)
           .where('postId', whereIn: postIds)
+          .where('userId', isNotEqualTo: userId) // Exclude likes by the user themselves
           .orderBy('timestamp', descending: true)
           .limit(limit)
           .get();

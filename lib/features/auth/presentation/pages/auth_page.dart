@@ -53,7 +53,8 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary, 
         elevation: 0,
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
@@ -159,9 +160,15 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.grey[600],
                       dividerColor: Colors.transparent,
-                      tabs: const [
-                        Tab(text: 'Sign In'),
-                        Tab(text: 'Sign Up'),
+                      tabs: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Tab(icon: Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Tab(icon: Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
+                        ),
                       ],
                     ),
                   ),

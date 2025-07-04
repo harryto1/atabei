@@ -86,7 +86,7 @@ class NotificationsView extends StatelessWidget {
     return Scaffold(
       drawerScrimColor: Colors.black54,
       drawer: drawerWidget(context),
-      bottomNavigationBar: bottomAppBarWidget(context),
+      bottomNavigationBar: bottomAppBarWidget(context, 2),
       backgroundColor: TimelineTheme.timelineBackgroundColor(context),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(100),

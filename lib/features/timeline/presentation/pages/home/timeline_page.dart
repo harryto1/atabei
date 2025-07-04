@@ -330,7 +330,7 @@ class TimelineView extends StatelessWidget {
     return Scaffold(
       drawerScrimColor: Colors.black54,
       drawer: drawerWidget(context), 
-      bottomNavigationBar: bottomAppBarWidget(context),
+      bottomNavigationBar: bottomAppBarWidget(context, 0),
       backgroundColor: TimelineTheme.timelineBackgroundColor(context),
       appBar: appBarWidget(context),
       body: BlocConsumer<TimelineBloc, TimelineState>(
