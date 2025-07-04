@@ -1,4 +1,7 @@
+import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 BottomAppBar bottomAppBarWidget(BuildContext context, int tabIndex) {
   return BottomAppBar(
@@ -31,7 +34,12 @@ BottomAppBar bottomAppBarWidget(BuildContext context, int tabIndex) {
             color: Theme.of(context).colorScheme.onPrimary,
           ),
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/notifications');
+            final authState = context.read<AuthBloc>().state;
+            if (authState is AuthUnauthenticated) {
+              Navigator.pushNamed(context, '/login');
+            } else {
+              Navigator.pushReplacementNamed(context, '/notifications');
+            }
           },
         ),
         IconButton(
@@ -40,7 +48,12 @@ BottomAppBar bottomAppBarWidget(BuildContext context, int tabIndex) {
             color: Theme.of(context).colorScheme.onPrimary,
           ),
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/profile');
+            final authState = context.read<AuthBloc>().state;
+            if (authState is AuthUnauthenticated) {
+              Navigator.pushNamed(context, '/login');
+            } else {
+              Navigator.pushReplacementNamed(context, '/profile');
+            }
           },
         ),
       ],
