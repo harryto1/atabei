@@ -116,3 +116,44 @@ class StreamError extends TimelineEvent {
   @override
   List<Object?> get props => [error];
 }
+
+class StartTimelineStreamFromAuthor extends TimelineEvent {
+  final String authorId;
+  final int limit;
+
+  const StartTimelineStreamFromAuthor({
+    required this.authorId,
+    this.limit = 20,
+  });
+
+  @override
+  List<Object?> get props => [authorId, limit];
+}
+
+class RefreshTimelineFromAuthor extends TimelineEvent {
+  final String authorId;
+  final int limit;
+
+  const RefreshTimelineFromAuthor({
+    required this.authorId,
+    this.limit = 20,
+  });
+
+  @override
+  List<Object?> get props => [authorId, limit];
+}
+
+class LoadTimelinePostsFromAuthor extends TimelineEvent {
+  final String authorId;
+  final int limit;
+  final bool isRefresh;
+
+  const LoadTimelinePostsFromAuthor({
+    required this.authorId,
+    this.limit = 20,
+    this.isRefresh = false,
+  });
+
+  @override
+  List<Object?> get props => [authorId, limit, isRefresh];
+}

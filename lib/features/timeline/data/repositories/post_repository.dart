@@ -102,7 +102,7 @@ class PostRepositoryImpl implements PostRepository {
       return _firestore
           .collection(_postsCollection)
           .where('userId', isEqualTo: authorId)
-          .orderBy('createdAt', descending: true)
+          .orderBy('dateOfPost', descending: true)
           .limit(limit)
           .snapshots()
           .map<DataState<List<PostEntity>>>((querySnapshot) {
@@ -120,6 +120,37 @@ class PostRepositoryImpl implements PostRepository {
       });
     } catch (e) {
       return Stream.value(DataError(FirestoreException(message: e.toString())));
+    }
+  }
+
+  @override
+  Future<DataState<List<PostEntity>>> getPostsFromAuthor({
+    required String authorId,
+    int limit = 20,
+  }) async {
+    try {
+      print('📚 Fetching posts from author: $authorId (limit: $limit)');
+      
+      final querySnapshot = await _firestore
+          .collection(_postsCollection)
+          .where('userId', isEqualTo: authorId)
+          .orderBy('dateOfPost', descending: true)
+          .limit(limit)
+          .get();
+
+      final posts = querySnapshot.docs
+          .map((doc) => PostModel.fromFirestore(doc) as PostEntity)
+          .toList();
+      
+      print('📚 Found ${posts.length} posts from author: $authorId');
+      
+      return DataSuccess<List<PostEntity>>(posts);
+    } on FirebaseException catch (e) {
+      print('❌ Firebase error getting posts from author: ${e.message}');
+      return DataError(FirestoreException.fromFirebaseException(e));
+    } catch (e) {
+      print('❌ Error getting posts from author: $e');
+      return DataError(FirestoreException(message: e.toString()));
     }
   }
 

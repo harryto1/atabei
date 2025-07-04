@@ -120,6 +120,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         print('❌ Failed to save FCM token: $error');
       });
 
+      
+
       emit(AuthAuthenticated(user: result.data!));
 
     } else if (result is DataError) {

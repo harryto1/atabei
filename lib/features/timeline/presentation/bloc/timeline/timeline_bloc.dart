@@ -28,6 +28,9 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     on<DeletePost>(_onDeletePost);
     on<LoadTimelinePosts>(_onLoadTimelinePosts);
     on<StreamDataReceived>(_onStreamDataReceived); 
+    on<StartTimelineStreamFromAuthor>(_onStartTimelineStreamFromAuthor);
+    on<RefreshTimelineFromAuthor>(_onRefreshTimelineFromAuthor);
+    on<LoadTimelinePostsFromAuthor>(_onLoadTimelinePostsFromAuthor);
   }
 
   void _onStartTimelineStream(
@@ -379,6 +382,108 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       } catch (e) {
         emit(currentState.copyWith(
           error: e.toString(),
+        ));
+      }
+    }
+  }
+
+  void _onStartTimelineStreamFromAuthor(
+    StartTimelineStreamFromAuthor event,
+    Emitter<TimelineState> emit,
+  ) async {
+    try {
+      print('🚀 Starting timeline stream for author: ${event.authorId}');
+      emit(TimelineLoading());
+      
+      await _postsStreamSubscription?.cancel();
+      
+      _postsStreamSubscription = _postsRepository
+          .getPostsByAuthorStream(event.authorId, limit: event.limit)
+          .listen(
+        (dataState) {
+          print('📡 Author stream received data: ${dataState.runtimeType}');
+          add(StreamDataReceived(dataState));
+        },
+        onError: (error) {
+          print('❌ Author stream listener error: $error');
+          add(StreamError(error.toString()));
+        },
+      );
+    } catch (e) {
+      print('❌ Author stream setup error: $e');
+      emit(TimelineError(message: e.toString()));
+    }
+  }
+
+  void _onRefreshTimelineFromAuthor(
+    RefreshTimelineFromAuthor event,
+    Emitter<TimelineState> emit,
+  ) async {
+    if (_postsStreamSubscription != null) {
+      print('🔄 Refreshing author timeline from stream data...');
+      _currentPosts = _latestStreamPosts;
+      emit(TimelineLoaded(
+        posts: _currentPosts,
+        hasNewPosts: false,
+        newPostsCount: 0,
+        isStreamActive: true,
+      ));
+    } else {
+      print('🔄 No stream active, fetching author posts manually...');
+      emit(TimelineLoading());
+      final result = await _postsRepository.getPostsFromAuthor(
+        authorId: event.authorId,
+        limit: event.limit,
+      );
+      
+      if (result is DataSuccess) {
+        _currentPosts = result.data!;
+        emit(TimelineLoaded(
+          posts: _currentPosts,
+          isStreamActive: false,
+        ));
+      } else if (result is DataError) {
+        emit(TimelineError(message: result.error?.message ?? 'Failed to load posts'));
+      }
+    }
+  }
+
+  void _onLoadTimelinePostsFromAuthor(
+    LoadTimelinePostsFromAuthor event,
+    Emitter<TimelineState> emit,
+  ) async {
+    if (event.isRefresh) {
+      if (_postsStreamSubscription != null) {
+        if (state is TimelineLoaded) {
+          final currentState = state as TimelineLoaded;
+          _currentPosts = _latestStreamPosts;
+          emit(currentState.copyWith(
+            posts: _currentPosts,
+            hasNewPosts: false,
+            newPostsCount: 0,
+            isStreamActive: true,
+          ));
+        }
+      } else {
+        add(StartTimelineStreamFromAuthor(authorId: event.authorId, limit: event.limit));
+      }
+    } else {
+      emit(TimelineLoading());
+      
+      final result = await _postsRepository.getPostsFromAuthor(
+        authorId: event.authorId,
+        limit: event.limit,
+      );
+      
+      if (result is DataSuccess) {
+        _currentPosts = result.data!;
+        emit(TimelineLoaded(
+          posts: _currentPosts,
+          isStreamActive: false,
+        ));
+      } else if (result is DataError) {
+        emit(TimelineError(
+          message: result.error?.message ?? 'Failed to load posts',
         ));
       }
     }

@@ -25,7 +25,7 @@ AppBar appBarWidget(BuildContext context) {
           if (state is AuthAuthenticated) {
             return GestureDetector(
               onTap:() {
-                Navigator.pushNamed(context, '/profile');
+                Navigator.pushReplacementNamed(context, '/profile');
               },
               child: CircleAvatar(
                     radius: 20,

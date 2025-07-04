@@ -21,6 +21,11 @@ abstract class PostRepository {
   Stream<DataState<PostEntity>> getPostStream(String postId);
   Stream<DataState<List<PostEntity>>> getPostsByAuthorStream(String authorId, {int limit = 20});
 
+  Future<DataState<List<PostEntity>>> getPostsFromAuthor({
+    required String authorId,
+    int limit = 20,
+  });
+
   likePost(String postId, String userId, String username) {}
 
   unlikePost(String postId, String userId) {}

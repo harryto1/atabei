@@ -127,13 +127,38 @@ class NotificationService {
       String? token = await _firebaseMessaging.getToken();
       User? user = _auth.currentUser;
       if (token != null && user != null) {
-        await _firestore.collection('users').doc(user.uid).set(
-          {
-            'fcmToken': token,
-            'username': user.displayName ?? '',
-          },
-          SetOptions(merge: true), // Merge to avoid overwriting other fields
-        );
+        final userDocRef = _firestore.collection('users').doc(user.uid);
+        final userDoc = await userDocRef.get();
+
+        Map<String, dynamic> defaultFields = {
+          'fcmToken': token,
+          'username': user.displayName ?? '',
+          'bio': '',
+          'pathToProfilePicture': user.photoURL ?? '',
+          'location': '',
+          'birthdate': '',
+          'dateJoined': user.metadata.creationTime,
+          'isPrivate': false,
+        };
+
+        if (!userDoc.exists) {
+          // If document doesn't exist, set all fields
+          await userDocRef.set(defaultFields);
+        } else {
+          // If document exists, only set missing fields and always update fcmToken
+          Map<String, dynamic> updates = {'fcmToken': token};
+          defaultFields.forEach((key, value) {
+            if (!userDoc.data()!.containsKey(key)) {
+              updates[key] = value;
+            }
+          });
+          if (updates.length > 1) {
+            await userDocRef.update(updates);
+          } else {
+            // Only fcmToken needs update
+            await userDocRef.update({'fcmToken': token});
+          }
+        }
         print('✅ FCM token saved: $token');
       } else {
         print('❌ No user signed in or token is null');
