@@ -121,48 +121,6 @@ class PostDetailPage extends StatelessWidget {
                   
                   // Engagement Stats
                   Divider(), 
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                    child: Row(
-                      children: [
-                        if (post.reposts > 0) ...[
-                          Text(
-                            '${post.reposts}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Reposts',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                          const SizedBox(width: 20),
-                        ],
-                        if (post.likes > 0) ...[
-                          Text(
-                            '${post.likes}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Likes',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                          const SizedBox(width: 20),
-                        ],
-                        if (post.bookmarks > 0) ...[
-                          Text(
-                            '${post.bookmarks}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Bookmarks',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
                   
                   // Action Buttons
                   Padding(
