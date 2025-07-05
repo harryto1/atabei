@@ -3,6 +3,8 @@ import 'package:atabei/core/util/firestore_exception.dart';
 import 'package:atabei/features/notifications/data/models/likes_model.dart';
 import 'package:atabei/features/notifications/domain/entities/likes_entity.dart';
 import 'package:atabei/features/notifications/domain/repositories/notifications_repository.dart';
+import 'package:atabei/features/timeline/data/models/post_model.dart';
+import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NotificationsRepositoryImpl implements NotificationsRepository {
@@ -93,6 +95,26 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
       return DataSuccess<List<LikesEntity>>(likesEntities);
     } catch (e) {
       return DataError(FirestoreException(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<DataState<PostEntity>> getPostFromNotification(String postId) {
+    try {
+      return _firestore
+          .collection(_postsCollection)
+          .doc(postId)
+          .get()
+          .then((doc) {
+            if (doc.exists) {
+              final postEntity = PostModel.fromFirestore(doc) as PostEntity;
+              return DataSuccess<PostEntity>(postEntity);
+            } else {
+              return DataError<PostEntity>(FirestoreException(message: 'Post not found'));
+            }
+          });
+    } catch (e) {
+      return Future.value(DataError<PostEntity>(FirestoreException(message: e.toString())));
     }
   }
   

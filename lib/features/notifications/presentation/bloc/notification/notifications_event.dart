@@ -90,3 +90,19 @@ class StreamError extends NotificationsEvent {
   List<Object?> get props => [error];
 }
 
+class GetPostFromNotification extends NotificationsEvent {
+  final String postId;
+  final String notificationId; 
+  final String userId;
+  final int limit; 
+
+  const GetPostFromNotification(this.postId, {
+    required this.notificationId,
+    required this.userId,
+    this.limit = 20,
+  });
+
+  @override
+  List<Object?> get props => [postId, notificationId, userId, limit];
+}
+

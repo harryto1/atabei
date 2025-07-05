@@ -21,6 +21,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     on<RefreshNotifications>(_onRefreshNotifications);
     on<LoadNotifications>(_onLoadNotifications);
     on<StreamDataReceived>(_onStreamDataReceived);
+    on<GetPostFromNotification>(_onGetPostFromNotification);
   }
 
   void _onStartNotificationsStream(
@@ -28,6 +29,8 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     Emitter<NotificationsState> emit,
   ) async {
     try {
+      emit(NotificationsLoading());
+
       print('🔔 Starting notifications stream for user: ${event.userId}');
       await _notificationsStreamSubscription?.cancel();
 
@@ -223,6 +226,30 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
           message: result.error?.message ?? 'Failed to load notifications',
         ));
       }
+    }
+  }
+
+  void _onGetPostFromNotification(
+    GetPostFromNotification event,
+    Emitter<NotificationsState> emit,
+  ) async {
+    try {
+      emit(PostLoading());
+      print('🔍 Fetching post from notification: ${event.postId}');
+      print('🔍 Current user ID: ${event.userId}'); 
+      
+      final result = await _notificationsRepository.getPostFromNotification(event.postId);
+      
+      if (result is DataSuccess) {
+        print('📄 Post data received: ${result.data!.id}');
+        
+        emit(GotPostFromNotification(result.data!, _currentLikes));
+        
+      } else if (result is DataError) {
+        emit(NotificationsError(message: result.error?.message ?? 'Failed to load post'));
+      }
+    } catch (e) {
+      emit(NotificationsError(message: 'Error fetching post: $e'));
     }
   }
 

@@ -1,5 +1,7 @@
+import 'package:atabei/features/notifications/domain/entities/likes_entity.dart';
 import 'package:atabei/features/notifications/presentation/pages/widgets/notification_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atabei/components/bottom_appbar/bottom_appbar_widget.dart';
 import 'package:atabei/components/drawer/drawer_widget.dart';
@@ -71,7 +73,7 @@ class _NotificationsPageState extends State<NotificationsPage> with SingleTicker
   }
 }
 
-class NotificationsView extends StatelessWidget {
+class NotificationsView extends StatefulWidget {
   final TabController tabController;
   final VoidCallback onRefresh;
 
@@ -80,6 +82,13 @@ class NotificationsView extends StatelessWidget {
     required this.tabController,
     required this.onRefresh,
   });
+
+  @override
+  State<NotificationsView> createState() => _NotificationsViewState();
+}
+
+class _NotificationsViewState extends State<NotificationsView> {
+  bool hasNavigated = false;
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +108,7 @@ class NotificationsView extends StatelessWidget {
           ),
           centerTitle: true,
           bottom: TabBar(
-            controller: tabController,
+            controller: widget.tabController,
             indicatorColor: Theme.of(context).colorScheme.onPrimary,
             labelColor: Theme.of(context).colorScheme.onPrimary,
             unselectedLabelColor: Colors.grey,
@@ -112,6 +121,29 @@ class NotificationsView extends StatelessWidget {
       ),
       body: BlocConsumer<NotificationsBloc, NotificationsState>(
         listener: (context, state) {
+          // Handle navigation in the listener
+          if (state is GotPostFromNotification && !hasNavigated) {
+            hasNavigated = true; // Set flag to prevent double navigation
+            
+            Navigator.pushNamed(
+              context, 
+              '/post/${state.post.id}', 
+              arguments: state.post
+            ).then((_) {
+              if (mounted) {
+                hasNavigated = false; // Reset flag when returning
+                context.read<NotificationsBloc>().add(
+                  RefreshNotifications(
+                    notificationId: '',
+                    userId: state.post.userId,
+                    limit: 50,
+                  ),
+                );
+              }
+            });
+          }
+          
+          // Handle error notifications
           if (state is NotificationsLoaded && state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -122,8 +154,12 @@ class NotificationsView extends StatelessWidget {
           }
         },
         builder: (context, state) {
+          if (state is GotPostFromNotification) {
+            // If we got a post from notification, we don't need to show the tabs
+            return const SizedBox.shrink();
+          }
           return TabBarView(
-            controller: tabController,
+            controller: widget.tabController,
             children: [
               // All notifications tab
               _buildNotificationsTab(context, state, NotificationType.all),
@@ -188,7 +224,29 @@ class NotificationsView extends StatelessWidget {
     NotificationType type,
   ) {
     if (state is NotificationsLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading notifications...'),
+          ],
+        ),
+      );
+    }
+
+    if (state is PostLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading post...'),
+          ],
+        ),
+      );
     }
 
     if (state is NotificationsError) {
@@ -233,80 +291,94 @@ class NotificationsView extends StatelessWidget {
       );
     }
 
-    if (state is NotificationsLoaded) {
-      final filteredNotifications = _filterNotifications(state.likes, type);
+    
+    final likes = state is NotificationsLoaded
+        ? state.likes
+        : state is GotPostFromNotification
+            ? state.likes
+            : <LikesEntity>[];
+            
+    print('🔔 Building content with ${likes.length} notifications'); 
 
-      if (filteredNotifications.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.notifications_outlined,
-                size: 64,
-                color: Colors.grey.withOpacity(0.6),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No notifications yet',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                type == NotificationType.all
-                    ? 'When someone likes your posts, you\'ll see it here'
-                    : 'When someone mentions you, you\'ll see it here',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        );
-      }
+    final filteredNotifications = _filterNotifications(likes, type);
+    
+    print('🔔 Filtered to ${filteredNotifications.length} notifications for type: $type'); 
 
-      return RefreshIndicator(
-        onRefresh: () async {
-          onRefresh();
-        },
-        child: ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          itemCount: filteredNotifications.length,
-          itemBuilder: (context, index) {
-            final notification = filteredNotifications[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: NotificationWidget(
-                notification: notification,
-                onTap: () => _onNotificationTap(context, notification),
-              ),
-            );
-          },
+    if (filteredNotifications.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_outlined,
+              size: 64,
+              color: Colors.grey.withOpacity(0.6),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No notifications yet',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              type == NotificationType.all
+                  ? 'When someone likes your posts, you\'ll see it here'
+                  : 'When someone mentions you, you\'ll see it here',
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       );
     }
 
-    return const SizedBox.shrink();
+    return RefreshIndicator(
+      onRefresh: () async {
+        widget.onRefresh();
+      },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: filteredNotifications.length,
+        itemBuilder: (context, index) {
+          final notification = filteredNotifications[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: NotificationWidget(
+              notification: notification,
+              onTap: () => _onNotificationTap(context, notification),
+            ),
+          );
+        },
+      ),
+    );
   }
 
-  List<dynamic> _filterNotifications(List<dynamic> notifications, NotificationType type) {
+  List<LikesEntity> _filterNotifications(List<LikesEntity> notifications, NotificationType type) {
+    print('🔔 Filtering ${notifications.length} notifications'); 
+    
     // For now, we're only handling likes
     switch (type) {
       case NotificationType.all:
         return notifications;
       case NotificationType.mentions:
-        // Filter for mentions later 
-        return notifications; 
-      }
+        return []; 
+    }
   }
 
-  void _onNotificationTap(BuildContext context, dynamic notification) {
-    // Navigate to the post when notification is tapped
-    if (notification.postId != null) {
-      Navigator.pushNamed(
-        context,
-        '/post/${notification.postId}',
-        arguments: notification,
+  void _onNotificationTap(BuildContext context, LikesEntity notification) {
+    print('🔔 Notification tapped: ${notification.postId}'); 
+
+    HapticFeedback.selectionClick();
+    
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      context.read<NotificationsBloc>().add(
+        GetPostFromNotification(
+          notification.postId, 
+          notificationId: notification.id, 
+          userId: authState.user.uid,
+        ),
       );
     }
   }

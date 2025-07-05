@@ -1,4 +1,5 @@
 import 'package:atabei/features/notifications/domain/entities/likes_entity.dart';
+import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class NotificationsState extends Equatable {
@@ -11,6 +12,8 @@ abstract class NotificationsState extends Equatable {
 class NotificationsInitial extends NotificationsState {}
 
 class NotificationsLoading extends NotificationsState {}
+
+class PostLoading extends NotificationsState {}
 
 class NotificationsLoaded extends NotificationsState {
   final List<LikesEntity> likes;
@@ -63,4 +66,14 @@ class NotificationsEmpty extends NotificationsState {
 
   @override
   List<Object?> get props => [message];
+}
+
+class GotPostFromNotification extends NotificationsState {
+  final PostEntity post;
+  final List<LikesEntity> likes; 
+
+  const GotPostFromNotification(this.post, this.likes);
+
+  @override
+  List<Object?> get props => [post, likes];
 }
