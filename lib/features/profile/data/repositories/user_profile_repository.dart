@@ -115,4 +115,106 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       );
     }
   }
+
+  @override
+  Future<DataState<List<UserProfileEntity>>> searchUserProfiles(
+    String query, {
+    int limit = 20,
+  }) async {
+    try {
+      print('📝 Repository: Searching profiles for query: "$query"');
+      
+      if (query.trim().isEmpty) {
+        return DataSuccess<List<UserProfileEntity>>([]);
+      }
+
+      final lowercaseQuery = query.toLowerCase();
+      
+      final queries = <Future<QuerySnapshot>>[];
+      
+      queries.add(
+        _firestore
+            .collection(_usersCollection)
+            .where('username', isGreaterThanOrEqualTo: lowercaseQuery)
+            .where('username', isLessThan: '${lowercaseQuery}z')
+            .limit(limit)
+            .get(),
+      );
+      
+      queries.add(
+        _firestore
+            .collection(_usersCollection)
+            .where('usernameSearch', arrayContains: lowercaseQuery)
+            .limit(limit)
+            .get(),
+      );
+
+      final results = await Future.wait(queries);
+      
+      // Combine and deduplicate results
+      final Set<String> seenIds = {};
+      final List<UserProfileEntity> combinedResults = [];
+      
+      for (final querySnapshot in results) {
+        for (final doc in querySnapshot.docs) {
+          if (!seenIds.contains(doc.id)) {
+            seenIds.add(doc.id);
+            try {
+              final profile = UserProfileModel.fromFirestore(doc) as UserProfileEntity;
+              
+              // Additional filtering for better matches
+              if (_isRelevantMatch(profile, query)) {
+                combinedResults.add(profile);
+              }
+            } catch (e) {
+              print('📝 Repository: Error parsing document ${doc.id}: $e');
+            }
+          }
+        }
+      }
+      
+      combinedResults.sort((a, b) => _calculateRelevance(b, query).compareTo(_calculateRelevance(a, query)));
+      
+      final finalResults = combinedResults.take(limit).toList();
+      
+      print('📝 Repository: Search completed - ${finalResults.length} profiles found');
+      return DataSuccess<List<UserProfileEntity>>(finalResults);
+      
+    } on FirebaseException catch (error) {
+      print('📝 Repository: Firebase error during search: ${error.message}');
+      return DataError<List<UserProfileEntity>>(
+        FirestoreException.fromFirebaseException(error)
+      );
+    } catch (e) {
+      print('📝 Repository: General error during search: $e');
+      return DataError<List<UserProfileEntity>>(
+        FirestoreException(message: e.toString())
+      );
+    }
+  }
+
+  bool _isRelevantMatch(UserProfileEntity profile, String query) {
+    final lowercaseQuery = query.toLowerCase();
+    final username = profile.username.toLowerCase();
+    final bio = profile.bio?.toLowerCase() ?? '';
+    
+    return username.contains(lowercaseQuery) || 
+           username.startsWith(lowercaseQuery) ||
+           bio.contains(lowercaseQuery);
+  }
+
+  int _calculateRelevance(UserProfileEntity profile, String query) {
+    final lowercaseQuery = query.toLowerCase();
+    final username = profile.username.toLowerCase();
+    
+    if (username == lowercaseQuery) return 100;
+    
+    if (username.startsWith(lowercaseQuery)) return 80;
+    
+    if (username.contains(lowercaseQuery)) return 60;
+    
+    if (profile.bio?.toLowerCase().contains(lowercaseQuery) == true) return 40;
+    
+    return 0;
+  }
 }

@@ -5,4 +5,9 @@ abstract class UserProfileRepository {
   Future<DataState<UserProfileEntity>> fetchUserProfile(String userId);
   Future<DataState<void>> updateUserProfile(UserProfileEntity userProfile);
   Future<DataState<void>> deleteUserProfile(String userId);
+  // For search feature
+  Future<DataState<List<UserProfileEntity>>> searchUserProfiles(
+    String query, {
+    int limit = 20,
+  });
 }

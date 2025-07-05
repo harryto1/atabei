@@ -282,7 +282,7 @@ class PostWidget extends StatelessWidget {
             ),
             BlocBuilder<AuthBloc, AuthState>(
               builder:(context, state) {
-                if (state is AuthAuthenticated) {
+                if (state is AuthAuthenticated && state.user.uid == post.userId) {
                   return ListTile(
                     leading: const Icon(Icons.delete),
                     title: const Text('Delete Post'),

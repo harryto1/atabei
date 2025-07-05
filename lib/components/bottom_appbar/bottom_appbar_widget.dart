@@ -23,9 +23,10 @@ BottomAppBar bottomAppBarWidget(BuildContext context, int tabIndex) {
           icon: Icon(
             tabIndex == 1 ? Icons.search_rounded : Icons.search_outlined,
             color: Theme.of(context).colorScheme.onPrimary,
+            fill: tabIndex == 1 ? 1 : 0,
           ),
           onPressed: () {
-            // Navigate to search page
+            Navigator.pushReplacementNamed(context, '/search');
           },
         ),
         IconButton(
