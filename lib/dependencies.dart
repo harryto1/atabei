@@ -32,7 +32,7 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton<UserProfileRepositoryImpl>(() => UserProfileRepositoryImpl(firestore: sl<FirebaseFirestore>()));
 
   // Profile
-  sl.registerLazySingleton<ProfileCubit>(() => ProfileCubit(userProfileRepository: sl<UserProfileRepositoryImpl>()));
+  sl.registerFactory<ProfileCubit>(() => ProfileCubit(userProfileRepository: sl<UserProfileRepositoryImpl>()));
 
   // Notifications
   sl.registerLazySingleton<NotificationsRepositoryImpl>(() => NotificationsRepositoryImpl(firestore: sl<FirebaseFirestore>()));

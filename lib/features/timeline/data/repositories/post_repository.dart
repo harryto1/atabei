@@ -1,5 +1,6 @@
 import 'package:atabei/core/resources/data_state.dart';
 import 'package:atabei/core/util/firestore_exception.dart';
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/timeline/data/models/post_model.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:atabei/features/timeline/domain/repositories/post_repository.dart';
@@ -9,7 +10,7 @@ class PostRepositoryImpl implements PostRepository {
   final FirebaseFirestore _firestore; 
   static const String _postsCollection = 'post';
 
-  PostRepositoryImpl({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance;
+  PostRepositoryImpl({FirebaseFirestore? firestore}) : _firestore = firestore ?? sl<FirebaseFirestore>();
 
   @override
   Future<DataState<PostEntity>> createPost(PostEntity post) async {

@@ -162,11 +162,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     
     final result = await _authRepository.signOut();
+
+    if (result is DataSuccess) {
+      print('✅ Sign out successful');
+    }
     
     if (result is DataError) {
       emit(AuthError(message: result.error?.message ?? 'Sign out failed'));
     }
-    // Success case handled by stream
+
   }
 
   @override

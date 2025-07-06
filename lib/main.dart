@@ -14,9 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await initializeDependencies();
   await NotificationService.initialize();
   FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
-  await initializeDependencies();
   runApp(MyApp(appRouter: AppRouter()));
 }
 
@@ -45,5 +45,9 @@ class MyApp extends StatelessWidget {
 
 Future<void> _handleBackgroundMessage(RemoteMessage message) async {
   print('🔔 Background message: ${message.notification?.title}, ${message.notification?.body}');
-  NotificationService.showLocalNotification(message);
+  try {
+    NotificationService.showLocalNotification(message);
+  } catch (e) {
+    print(e.toString()); 
+  }
 }
