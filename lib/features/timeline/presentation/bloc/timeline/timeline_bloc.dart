@@ -185,19 +185,6 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     }
   }
 
-  void _onLoadNewPosts(
-    LoadNewPosts event,
-    Emitter<TimelineState> emit,
-  ) {
-    _currentPosts = _latestStreamPosts;
-    emit(TimelineLoaded(
-      posts: _currentPosts,
-      hasNewPosts: false,
-      newPostsCount: 0,
-      isStreamActive: _postsStreamSubscription != null,
-    ));
-  }
-
   void _onLikePost(
     LikePost event,
     Emitter<TimelineState> emit,
