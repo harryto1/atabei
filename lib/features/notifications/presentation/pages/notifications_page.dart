@@ -1,3 +1,4 @@
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/notifications/domain/entities/likes_entity.dart';
 import 'package:atabei/features/notifications/presentation/pages/widgets/notification_widget.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +30,7 @@ class _NotificationsPageState extends State<NotificationsPage> with SingleTicker
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     notificationsBloc = NotificationsBloc(
-      notificationsRepository: NotificationsRepositoryImpl(),
+      notificationsRepository: sl<NotificationsRepositoryImpl>(),
     );
     
     // Start notifications stream when page loads

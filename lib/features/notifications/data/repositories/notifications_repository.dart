@@ -1,5 +1,6 @@
 import 'package:atabei/core/resources/data_state.dart';
 import 'package:atabei/core/util/firestore_exception.dart';
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/notifications/data/models/likes_model.dart';
 import 'package:atabei/features/notifications/domain/entities/likes_entity.dart';
 import 'package:atabei/features/notifications/domain/repositories/notifications_repository.dart';
@@ -12,7 +13,7 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   static const String _likesCollection = 'likes';
   static const String _postsCollection = 'post';
 
-  NotificationsRepositoryImpl({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance;
+  NotificationsRepositoryImpl({FirebaseFirestore? firestore}) : _firestore = firestore ?? sl<FirebaseFirestore>();
 
 
 

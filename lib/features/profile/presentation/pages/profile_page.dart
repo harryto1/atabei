@@ -1,3 +1,4 @@
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:atabei/features/profile/presentation/cubit/profile/profile_cubit.dart';
 import 'package:atabei/features/profile/presentation/cubit/profile/profile_state.dart';
@@ -8,7 +9,6 @@ import 'package:atabei/components/bottom_appbar/bottom_appbar_widget.dart';
 import 'package:atabei/components/drawer/drawer_widget.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
-import 'package:atabei/features/profile/data/repositories/user_profile_repository.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_bloc.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_state.dart';
@@ -39,13 +39,12 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     
     // Initialize cubits/blocs
-    profileCubit = ProfileCubit(
-      userProfileRepository: UserProfileRepositoryImpl(),
-    );
+    profileCubit = sl<ProfileCubit>();
+    // profileCubit.loadProfile(widget.userId);
     
     timelineBloc = TimelineBloc(
-      postsRepository: PostRepositoryImpl(),
-      localImageRepository: LocalImageRepositoryImpl(),
+      postsRepository: sl<PostRepositoryImpl>(),
+      localImageRepository: sl<LocalImageRepositoryImpl>(),
     );
     
     // Get target user ID and load data

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:atabei/components/appbar/appbar_widget.dart';
 import 'package:atabei/components/bottom_appbar/bottom_appbar_widget.dart';
 import 'package:atabei/components/drawer/drawer_widget.dart';
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
@@ -34,8 +35,8 @@ class _TimelinePageState extends State<TimelinePage> {
   void initState() {
     super.initState();
     timelineBloc = TimelineBloc(
-      postsRepository: PostRepositoryImpl(),
-      localImageRepository: LocalImageRepositoryImpl(),
+      postsRepository: sl<PostRepositoryImpl>(),
+      localImageRepository: sl<LocalImageRepositoryImpl>(),
     )..add(const StartTimelineStream());
   }
 

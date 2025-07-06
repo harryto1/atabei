@@ -50,6 +50,11 @@ exports.sendLikeNotification = functions.firestore
         return;
       }
 
+      if (owner && owner.fcmToken === liker.fcmToken) {
+        console.log(`Liker and owner are the same user: ${likerId} for like: ${likeId}`);
+        return; // Do not send notification if liker is the owner
+      }
+
       const message = {
         notification: {
           title: "New Like!",

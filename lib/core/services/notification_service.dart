@@ -1,3 +1,5 @@
+import 'package:atabei/core/services/navigation_service.dart';
+import 'package:atabei/dependencies.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,10 +7,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class NotificationService {
-  static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance; 
+  static final FirebaseMessaging _firebaseMessaging = sl<FirebaseMessaging>(); 
   static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseFirestore _firestore = sl<FirebaseFirestore>();
+  static final FirebaseAuth _auth = sl<FirebaseAuth>();
 
   static Future<void> initialize() async {
     await _requestPermissions();
@@ -36,7 +38,7 @@ class NotificationService {
 
   // Set up local notifications for foreground messages
   static Future<void> _initializeLocalNotifications() async {
-    // Android settings (use your app's icon)
+    // Android settings with the app icon
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 
     // iOS settings
@@ -57,7 +59,7 @@ class NotificationService {
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         if (response.payload != null) {
           print('Tapped notification with payload: ${response.payload}');
-          // TODO: Navigate to the notifications
+          _navigateToNotifications(); 
         }
       },
     );
@@ -80,26 +82,29 @@ class NotificationService {
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (message.notification != null) {
-        _showLocalNotification(message);
+        showLocalNotification(message);
       }
     });
 
     // Handle taps when app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print('Opened notification: ${message.data}');
-      // TODO: Navigate to the notifications 
+      _navigateToNotifications();
+
     });
 
     // Handle taps when app is terminated
     RemoteMessage? initialMessage = await _firebaseMessaging.getInitialMessage();
     if (initialMessage != null) {
       print('App opened from terminated: ${initialMessage.data}');
-      // TODO: Navigate to the notifications
+      Future.delayed(const Duration(seconds: 1), () {
+        _navigateToNotifications();
+      }); 
     }
   }
 
   // Show a local notification for foreground messages
-  static Future<void> _showLocalNotification(RemoteMessage message) async {
+  static Future<void> showLocalNotification(RemoteMessage message) async {
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'likes_channel',
       'Likes Notifications',
@@ -119,6 +124,16 @@ class NotificationService {
       details,
       payload: message.data['postId'], // Store postId for navigation
     );
+  }
+
+  static void _navigateToNotifications() {
+    print('🔔 Navigating to notifications page');
+    
+    try {
+      NavigationService.navigateToReplacement('/notifications');
+    } catch (e) {
+      print('❌ Error navigating to notifications: $e');
+    }
   }
 
   // Save the user's FCM token to Firestore

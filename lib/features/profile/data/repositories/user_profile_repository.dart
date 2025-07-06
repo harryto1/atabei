@@ -1,5 +1,6 @@
 import 'package:atabei/core/resources/data_state.dart';
 import 'package:atabei/core/util/firestore_exception.dart';
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/profile/data/models/user_profile_model.dart';
 import 'package:atabei/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:atabei/features/profile/domain/repositories/user_profile_repository.dart';
@@ -10,7 +11,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   static const String _usersCollection = 'users';
 
   UserProfileRepositoryImpl({FirebaseFirestore? firestore}) 
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? sl<FirebaseFirestore>();
 
   @override
   Future<DataState<UserProfileEntity>> fetchUserProfile(String userId) async {

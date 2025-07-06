@@ -1,4 +1,5 @@
 import 'package:atabei/core/resources/data_state.dart';
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/auth/data/models/user_model.dart';
 import 'package:atabei/features/auth/domain/entities/user_entity.dart';
 import 'package:atabei/features/auth/domain/repositories/auth_repository.dart';
@@ -7,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _firebaseAuth; 
 
-  AuthRepositoryImpl({FirebaseAuth? firebaseAuth}) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+  AuthRepositoryImpl({FirebaseAuth? firebaseAuth}) : _firebaseAuth = firebaseAuth ?? sl<FirebaseAuth>();
 
   @override
   Stream<UserEntity?> get authStateChanges {

@@ -1,5 +1,6 @@
 import 'package:atabei/config/routes/app_router.dart';
 import 'package:atabei/config/theme/app_theme.dart';
+import 'package:atabei/core/services/navigation_service.dart';
 import 'package:atabei/features/auth/data/repositories/auth_repository.dart';
 import 'package:atabei/core/services/notification_service.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.lightTheme, 
         darkTheme: AppTheme.darkTheme, 
         themeMode: ThemeMode.system,
+        navigatorKey: NavigationService.navigatorKey,
         onGenerateRoute: appRouter.onGenerateRoute, 
       ),
     );
@@ -42,4 +44,5 @@ class MyApp extends StatelessWidget {
 
 Future<void> _handleBackgroundMessage(RemoteMessage message) async {
   print('🔔 Background message: ${message.notification?.title}, ${message.notification?.body}');
+  NotificationService.showLocalNotification(message);
 }
