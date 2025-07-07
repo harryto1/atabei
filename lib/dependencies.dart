@@ -2,6 +2,9 @@ import 'package:atabei/core/services/navigation_service.dart';
 import 'package:atabei/core/services/notification_service.dart';
 import 'package:atabei/features/auth/data/repositories/auth_repository.dart';
 import 'package:atabei/features/notifications/data/repositories/notifications_repository.dart';
+import 'package:atabei/features/notifications/domain/usecases/get_notifications.dart';
+import 'package:atabei/features/notifications/domain/usecases/get_notifications_stream.dart';
+import 'package:atabei/features/notifications/domain/usecases/get_post_from_notifications.dart';
 import 'package:atabei/features/profile/data/repositories/user_profile_repository.dart';
 import 'package:atabei/features/profile/domain/usecases/delete_user_profile.dart';
 import 'package:atabei/features/profile/domain/usecases/fetch_user_profile.dart';
@@ -71,4 +74,9 @@ Future<void> initializeDependencies() async {
 
   // Use Cases - Search
   sl.registerFactory<SearchUserProfilesUseCase>(() => SearchUserProfilesUseCase(sl<UserProfileRepositoryImpl>()));
+
+  // Use Cases - Notifications
+  sl.registerFactory<GetNotificationsUseCase>(() => GetNotificationsUseCase(sl<NotificationsRepositoryImpl>()));
+  sl.registerFactory<GetPostFromNotificationUseCase>(() => GetPostFromNotificationUseCase(sl<NotificationsRepositoryImpl>()));
+  sl.registerFactory<GetNotificationsStreamUseCase>(() => GetNotificationsStreamUseCase(sl<NotificationsRepositoryImpl>()));
 }

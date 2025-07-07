@@ -1,4 +1,3 @@
-import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/notifications/domain/entities/likes_entity.dart';
 import 'package:atabei/features/notifications/presentation/pages/widgets/notification_widget.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +10,6 @@ import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:atabei/features/notifications/presentation/bloc/notification/notifications_bloc.dart';
 import 'package:atabei/features/notifications/presentation/bloc/notification/notifications_event.dart';
 import 'package:atabei/features/notifications/presentation/bloc/notification/notifications_state.dart';
-import 'package:atabei/features/notifications/data/repositories/notifications_repository.dart';
 import 'package:atabei/config/theme/timeline_theme.dart';
 
 class NotificationsPage extends StatefulWidget {
@@ -29,9 +27,7 @@ class _NotificationsPageState extends State<NotificationsPage> with SingleTicker
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    notificationsBloc = NotificationsBloc(
-      notificationsRepository: sl<NotificationsRepositoryImpl>(),
-    );
+    notificationsBloc = NotificationsBloc();
     
     // Start notifications stream when page loads
     final authState = context.read<AuthBloc>().state;

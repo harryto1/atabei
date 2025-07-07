@@ -1,20 +1,27 @@
 import 'dart:async';
-
 import 'package:atabei/core/resources/data_state.dart';
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/notifications/domain/entities/likes_entity.dart';
-import 'package:atabei/features/notifications/domain/repositories/notifications_repository.dart';
+import 'package:atabei/features/notifications/domain/usecases/get_notifications.dart';
+import 'package:atabei/features/notifications/domain/usecases/get_notifications_stream.dart';
+import 'package:atabei/features/notifications/domain/usecases/get_post_from_notifications.dart';
 import 'package:atabei/features/notifications/presentation/bloc/notification/notifications_event.dart';
 import 'package:atabei/features/notifications/presentation/bloc/notification/notifications_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
-  final NotificationsRepository _notificationsRepository;
+  final GetNotificationsUseCase _getNotificationsUseCase;
+  final GetNotificationsStreamUseCase _getNotificationsStreamUseCase;
+  final GetPostFromNotificationUseCase _getPostFromNotificationUseCase;
   StreamSubscription? _notificationsStreamSubscription;
   List<LikesEntity> _currentLikes = []; 
   List<LikesEntity> _latestStreamLikes = []; 
 
-  NotificationsBloc({required NotificationsRepository notificationsRepository}) : 
-  _notificationsRepository = notificationsRepository, super(NotificationsInitial()) {
+  NotificationsBloc() : 
+    _getNotificationsUseCase = sl<GetNotificationsUseCase>(),
+    _getNotificationsStreamUseCase = sl<GetNotificationsStreamUseCase>(),
+    _getPostFromNotificationUseCase = sl<GetPostFromNotificationUseCase>(),
+    super(NotificationsInitial()) {
     on<StartNotificationsStream>(_onStartNotificationsStream);
     on<StopNotificationsStream>(_onStopNotificationsStream);
     on<LoadNewNotifications>(_onLoadNewNotifications);
@@ -34,10 +41,12 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
       print('🔔 Starting notifications stream for user: ${event.userId}');
       await _notificationsStreamSubscription?.cancel();
 
-      _notificationsStreamSubscription = _notificationsRepository.getNotificationsStream(
-        event.notificationId,
-        event.userId,
-        limit: event.limit,
+      _notificationsStreamSubscription = _getNotificationsStreamUseCase(
+        params: GetNotificationsStreamParams(
+          notificationId: event.notificationId,
+          userId: event.userId,
+          limit: event.limit,
+        ),
       ).listen(
         (dataState) {
           print('🔔 Notifications stream data received: $dataState');
@@ -154,10 +163,12 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
       print('🔄 No stream active, fetching manually...'); // Add debug
 
       emit(NotificationsLoading());
-      final result = await _notificationsRepository.getNotifications(
-        event.notificationId,
-        event.userId,
-        limit: event.limit,
+      final result = await _getNotificationsUseCase(
+        params: GetNotificationsParams(
+          notificationId: event.notificationId,
+          userId: event.userId,
+          limit: event.limit,
+        ),
       );
 
       if (result is DataSuccess) {
@@ -209,10 +220,12 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     } else {
       emit(NotificationsLoading());
 
-      final result = await _notificationsRepository.getNotifications(
-        event.notificationId,
-        event.userId,
-        limit: event.limit,
+      final result = await _getNotificationsUseCase(
+        params: GetNotificationsParams(
+          notificationId: event.notificationId,
+          userId: event.userId,
+          limit: event.limit,
+        ),
       );
 
       if (result is DataSuccess) {
@@ -238,7 +251,11 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
       print('🔍 Fetching post from notification: ${event.postId}');
       print('🔍 Current user ID: ${event.userId}'); 
       
-      final result = await _notificationsRepository.getPostFromNotification(event.postId);
+      final result = await _getPostFromNotificationUseCase(
+        params: GetPostFromNotificationParams(
+          postId: event.postId,
+        ),
+      );
       
       if (result is DataSuccess) {
         print('📄 Post data received: ${result.data!.id}');
