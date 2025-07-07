@@ -1,15 +1,19 @@
+import 'package:atabei/dependencies.dart';
+import 'package:atabei/features/profile/domain/usecases/fetch_user_profile.dart';
+import 'package:atabei/features/profile/domain/usecases/update_user_profile.dart';
 import 'package:atabei/features/profile/presentation/cubit/profile/profile_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atabei/core/resources/data_state.dart';
 import 'package:atabei/features/profile/domain/entities/user_profile_entity.dart';
-import 'package:atabei/features/profile/domain/repositories/user_profile_repository.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
-  final UserProfileRepository _userProfileRepository;
+  final FetchUserProfileUseCase _fetchUserProfileUseCase;
+  final UpdateUserProfileUseCase _updateUserProfileUseCase;
   UserProfileEntity? _currentUserProfile;
 
-  ProfileCubit({required UserProfileRepository userProfileRepository})
-      : _userProfileRepository = userProfileRepository,
+  ProfileCubit()
+      : _fetchUserProfileUseCase = sl<FetchUserProfileUseCase>(),
+        _updateUserProfileUseCase = sl<UpdateUserProfileUseCase>(),
         super(ProfileInitial());
 
   Future<void> loadProfile(String userId) async {
@@ -17,7 +21,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileLoading());
 
     try {
-      final result = await _userProfileRepository.fetchUserProfile(userId);
+
+      final result = await _fetchUserProfileUseCase(params: FetchUserProfileParams(userId: userId));
 
       if (result is DataSuccess && result.data != null) {
         _currentUserProfile = result.data as UserProfileEntity;
@@ -42,7 +47,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileUpdating(currentProfile: userProfile));
 
     try {
-      final result = await _userProfileRepository.updateUserProfile(userProfile);
+      final result = await _updateUserProfileUseCase(params: UpdateUserProfileParams(userProfile: userProfile));
       
       print("🔔 Update result type: ${result.runtimeType}");
 
@@ -77,7 +82,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> _refreshFromFirestore(String userId) async {
     try {
       print("🔔 Refreshing profile from Firestore for consistency");
-      final result = await _userProfileRepository.fetchUserProfile(userId);
+      final result = await _fetchUserProfileUseCase(params: FetchUserProfileParams(userId: userId));
       
       if (result is DataSuccess && result.data != null) {
         final freshProfile = result.data as UserProfileEntity;

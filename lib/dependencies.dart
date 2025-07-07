@@ -3,7 +3,11 @@ import 'package:atabei/core/services/notification_service.dart';
 import 'package:atabei/features/auth/data/repositories/auth_repository.dart';
 import 'package:atabei/features/notifications/data/repositories/notifications_repository.dart';
 import 'package:atabei/features/profile/data/repositories/user_profile_repository.dart';
+import 'package:atabei/features/profile/domain/usecases/delete_user_profile.dart';
+import 'package:atabei/features/profile/domain/usecases/fetch_user_profile.dart';
+import 'package:atabei/features/profile/domain/usecases/update_user_profile.dart';
 import 'package:atabei/features/profile/presentation/cubit/profile/profile_cubit.dart';
+import 'package:atabei/features/search/domain/usecases/search_user_profiles.dart';
 import 'package:atabei/features/timeline/data/repositories/local_image_repository.dart';
 import 'package:atabei/features/timeline/data/repositories/post_repository.dart';
 import 'package:atabei/features/timeline/domain/usecases/create_post.dart';
@@ -41,7 +45,7 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton<UserProfileRepositoryImpl>(() => UserProfileRepositoryImpl(firestore: sl<FirebaseFirestore>()));
 
   // Profile
-  sl.registerFactory<ProfileCubit>(() => ProfileCubit(userProfileRepository: sl<UserProfileRepositoryImpl>()));
+  sl.registerFactory<ProfileCubit>(() => ProfileCubit());
 
   // Notifications
   sl.registerLazySingleton<NotificationsRepositoryImpl>(() => NotificationsRepositoryImpl(firestore: sl<FirebaseFirestore>()));
@@ -60,6 +64,11 @@ Future<void> initializeDependencies() async {
   sl.registerFactory<GetPostsByAuthorUseCase>(() => GetPostsByAuthorUseCase(sl<PostRepositoryImpl>()));
   sl.registerFactory<GetPostsUseCase>(() => GetPostsUseCase(sl<PostRepositoryImpl>()));
   
+  // Use Cases - Profile 
+  sl.registerFactory<UpdateUserProfileUseCase>(() => UpdateUserProfileUseCase(sl<UserProfileRepositoryImpl>()));
+  sl.registerFactory<DeleteUserProfileUseCase>(() => DeleteUserProfileUseCase(sl<UserProfileRepositoryImpl>()));
+  sl.registerFactory<FetchUserProfileUseCase>(() => FetchUserProfileUseCase(sl<UserProfileRepositoryImpl>()));
 
-
+  // Use Cases - Search
+  sl.registerFactory<SearchUserProfilesUseCase>(() => SearchUserProfilesUseCase(sl<UserProfileRepositoryImpl>()));
 }

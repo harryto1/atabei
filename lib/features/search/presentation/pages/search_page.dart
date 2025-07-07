@@ -1,10 +1,8 @@
-import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atabei/components/bottom_appbar/bottom_appbar_widget.dart';
 import 'package:atabei/components/drawer/drawer_widget.dart';
-import 'package:atabei/features/profile/data/repositories/user_profile_repository.dart';
 import 'package:atabei/features/profile/presentation/pages/profile_page.dart';
 import 'package:atabei/features/search/presentation/bloc/search/search_bloc.dart';
 import 'package:atabei/features/search/presentation/bloc/search/search_event.dart';
@@ -25,9 +23,7 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _searchBloc = SearchBloc(
-      userProfileRepository: sl<UserProfileRepositoryImpl>(),
-    );
+    _searchBloc = SearchBloc();
   }
 
   @override

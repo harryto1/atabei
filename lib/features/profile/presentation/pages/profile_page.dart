@@ -38,7 +38,7 @@ class _ProfilePageState extends State<ProfilePage> {
     
     // Initialize cubits/blocs
     profileCubit = sl<ProfileCubit>();
-    // profileCubit.loadProfile(widget.userId);
+    //TODO: profileCubit.loadProfile(widget.userId);
     
     timelineBloc = TimelineBloc();
     

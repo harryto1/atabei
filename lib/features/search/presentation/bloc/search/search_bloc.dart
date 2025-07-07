@@ -1,20 +1,21 @@
 import 'dart:async';
 import 'package:atabei/core/resources/data_state.dart';
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/profile/domain/entities/user_profile_entity.dart';
-import 'package:atabei/features/profile/domain/repositories/user_profile_repository.dart';
+import 'package:atabei/features/search/domain/usecases/search_user_profiles.dart';
 import 'package:atabei/features/search/presentation/bloc/search/search_event.dart';
 import 'package:atabei/features/search/presentation/bloc/search/search_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
-  final UserProfileRepository _userProfileRepository;
+  final SearchUserProfilesUseCase _searchUserProfilesUseCase;
   StreamSubscription? _searchStreamSubscription;
   List<UserProfileEntity> _currentResults = [];
   String _currentQuery = '';
   Timer? _debounceTimer;
 
-  SearchBloc({required UserProfileRepository userProfileRepository})
-      : _userProfileRepository = userProfileRepository,
+  SearchBloc()
+      : _searchUserProfilesUseCase = sl<SearchUserProfilesUseCase>(),
         super(SearchInitial()) {
     on<SearchQueryChanged>(_onSearchQueryChanged);
     on<LoadSearchResults>(_onLoadSearchResults);
@@ -67,9 +68,11 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
         emit(SearchLoading());
       }
 
-      final result = await _userProfileRepository.searchUserProfiles(
-        event.query,
-        limit: event.limit,
+      final result = await _searchUserProfilesUseCase(
+        params: SearchUserProfilesParams(
+          query: event.query,
+          limit: event.limit,
+        ),
       );
 
       if (result is DataSuccess) {
