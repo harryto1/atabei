@@ -1,18 +1,34 @@
 import 'dart:async';
 import 'package:atabei/core/resources/data_state.dart';
 import 'package:atabei/core/services/notification_service.dart';
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/auth/domain/entities/user_entity.dart';
-import 'package:atabei/features/auth/domain/repositories/auth_repository.dart';
+import 'package:atabei/features/auth/domain/usecases/get_auth_state_stream.dart';
+import 'package:atabei/features/auth/domain/usecases/get_current_user.dart';
+import 'package:atabei/features/auth/domain/usecases/sign_in.dart';
+import 'package:atabei/features/auth/domain/usecases/sign_out.dart';
+import 'package:atabei/features/auth/domain/usecases/sign_up.dart';
+import 'package:atabei/features/auth/domain/usecases/verify_current_user.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository _authRepository; 
+  final GetAuthStateStreamUseCase _getAuthStateStreamUseCase;
+  final GetCurrentUserUseCase _getCurrentUserUseCase;
+  final SignInUseCase _signInUseCase;
+  final SignOutUseCase _signOutUseCase;
+  final SignUpUseCase _signUpUseCase;
+  final VerifyCurrentUserUseCase _verifyCurrentUserUseCase;
   StreamSubscription? _authStateSubscription; 
 
-  AuthBloc({required AuthRepository authRepository}) : 
-    _authRepository = authRepository,
+  AuthBloc() : 
+    _getAuthStateStreamUseCase = sl<GetAuthStateStreamUseCase>(),
+    _getCurrentUserUseCase = sl<GetCurrentUserUseCase>(),
+    _signInUseCase = sl<SignInUseCase>(),
+    _signOutUseCase = sl<SignOutUseCase>(),
+    _signUpUseCase = sl<SignUpUseCase>(),
+    _verifyCurrentUserUseCase = sl<VerifyCurrentUserUseCase>(),
     super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthSignInRequested>(_onAuthSignInRequested);
@@ -26,14 +42,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
   
   void _startAuthStateListener() {
-    _authStateSubscription = _authRepository.authStateChanges.listen(
-      (user) {
-        if (user != null) {
-          add(StreamDataReceived(DataSuccess(user)));
-        } else {
-          add(StreamDataReceived(DataError(AuthException(message: 'User is null'))));
-        }
-      },
+    _authStateSubscription = _getAuthStateStreamUseCase().listen(
+      (dataState) { 
+        add(StreamDataReceived(dataState));
+            },
       onError: (error) {
         print('Auth stream error: $error');
         add(StreamDataReceived(DataError(AuthException(message: error.toString()))));
@@ -49,26 +61,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     
     print('🚀 Initializing app auth state...');
     
-    final user = _authRepository.getCurrentUser();
-    if (user != null) {
+  final userResult = await _getCurrentUserUseCase();
+  
+    if (userResult is DataSuccess && userResult.data != null) {
       try {
         print('🔍 Verifying current user at startup...');
-        final userExists = await _authRepository.verifyCurrentUser();         
-        if (userExists) {
+        final userExists = await _verifyCurrentUserUseCase();         
+        if (userExists is DataSuccess<bool> && userExists.data == true) {
           print('✅ User verified at startup');
-          emit(AuthAuthenticated(user: user));
+          emit(AuthAuthenticated(user: userResult.data!));
         } else {
           print('❌ User no longer exists, cleaning up...');
-          await _authRepository.signOut();
+          await _signOutUseCase();
           emit(AuthUnauthenticated());
         }
       } catch (e) {
         print('❌ Startup user verification failed: $e');
-        await _authRepository.signOut();
+        await _signOutUseCase();
         emit(AuthUnauthenticated());
       }
     } else {
-      print('ℹ️ No user at startup');
+      print('❌ No user found at startup');
       emit(AuthUnauthenticated());
     }
   }
@@ -90,10 +103,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   void _onAuthCheckRequested(
     AuthCheckRequested event,
     Emitter<AuthState> emit,
-  ) {
-    final user = _authRepository.getCurrentUser();
-    if (user != null) {
-      emit(AuthAuthenticated(user: user));
+  ) async {
+    final userResult = await _getCurrentUserUseCase();
+    
+    if (userResult is DataSuccess && userResult.data != null) {
+      emit(AuthAuthenticated(user: userResult.data!));
     } else {
       emit(AuthUnauthenticated());
     }
@@ -105,9 +119,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     
-    final result = await _authRepository.signInWithEmailAndPassword(
-      event.email,
-      event.password,
+    final result = await _signInUseCase(
+      params: SignInParams(
+        email: event.email,
+        password: event.password,
+      ),
     );
 
     if (result is DataSuccess) {
@@ -137,10 +153,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     
     print('📝 Attempting sign up...');
     
-    final result = await _authRepository.createUserWithEmailAndPassword(
-      event.email,
-      event.password,
-      event.displayName,
+    final result = await _signUpUseCase(
+      params: SignUpParams(
+        email: event.email,
+        password: event.password,
+        displayName: event.displayName,
+      ),
     );
 
     if (result is DataSuccess) {
@@ -161,7 +179,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     
-    final result = await _authRepository.signOut();
+    final result = await _signOutUseCase();
 
     if (result is DataSuccess) {
       print('✅ Sign out successful');

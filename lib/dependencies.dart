@@ -1,6 +1,12 @@
 import 'package:atabei/core/services/navigation_service.dart';
 import 'package:atabei/core/services/notification_service.dart';
 import 'package:atabei/features/auth/data/repositories/auth_repository.dart';
+import 'package:atabei/features/auth/domain/usecases/get_auth_state_stream.dart';
+import 'package:atabei/features/auth/domain/usecases/get_current_user.dart';
+import 'package:atabei/features/auth/domain/usecases/sign_in.dart';
+import 'package:atabei/features/auth/domain/usecases/sign_out.dart';
+import 'package:atabei/features/auth/domain/usecases/sign_up.dart';
+import 'package:atabei/features/auth/domain/usecases/verify_current_user.dart';
 import 'package:atabei/features/notifications/data/repositories/notifications_repository.dart';
 import 'package:atabei/features/notifications/domain/usecases/get_notifications.dart';
 import 'package:atabei/features/notifications/domain/usecases/get_notifications_stream.dart';
@@ -79,4 +85,12 @@ Future<void> initializeDependencies() async {
   sl.registerFactory<GetNotificationsUseCase>(() => GetNotificationsUseCase(sl<NotificationsRepositoryImpl>()));
   sl.registerFactory<GetPostFromNotificationUseCase>(() => GetPostFromNotificationUseCase(sl<NotificationsRepositoryImpl>()));
   sl.registerFactory<GetNotificationsStreamUseCase>(() => GetNotificationsStreamUseCase(sl<NotificationsRepositoryImpl>()));
+
+  // Use Cases - Auth
+  sl.registerFactory<GetCurrentUserUseCase>(() => GetCurrentUserUseCase(sl<AuthRepositoryImpl>()));
+  sl.registerFactory<SignOutUseCase>(() => SignOutUseCase(sl<AuthRepositoryImpl>()));
+  sl.registerFactory<SignUpUseCase>(() => SignUpUseCase(sl<AuthRepositoryImpl>()));
+  sl.registerFactory<SignInUseCase>(() => SignInUseCase(sl<AuthRepositoryImpl>()));
+  sl.registerFactory<VerifyCurrentUserUseCase>(() => VerifyCurrentUserUseCase(sl<AuthRepositoryImpl>()));
+  sl.registerFactory<GetAuthStateStreamUseCase>(() => GetAuthStateStreamUseCase(sl<AuthRepositoryImpl>()));
 }

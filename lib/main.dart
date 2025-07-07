@@ -2,7 +2,6 @@ import 'package:atabei/config/routes/app_router.dart';
 import 'package:atabei/config/theme/app_theme.dart';
 import 'package:atabei/core/services/navigation_service.dart';
 import 'package:atabei/dependencies.dart';
-import 'package:atabei/features/auth/data/repositories/auth_repository.dart';
 import 'package:atabei/core/services/notification_service.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
@@ -29,7 +28,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => AuthBloc(authRepository: sl<AuthRepositoryImpl>())
+      create: (context) => AuthBloc()
         ..add(AuthInitializeRequested()), 
       child: MaterialApp(
         title: 'Atabei',

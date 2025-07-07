@@ -42,7 +42,7 @@ class AuthSignUpRequested extends AuthEvent {
 class AuthSignOutRequested extends AuthEvent {}
 
 class StreamDataReceived extends AuthEvent {
-  final DataState<UserEntity> user; 
+  final DataState<UserEntity?> user; 
   
   const StreamDataReceived(this.user);
   
