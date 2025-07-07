@@ -2,17 +2,14 @@ import 'dart:io';
 import 'package:atabei/components/appbar/appbar_widget.dart';
 import 'package:atabei/components/bottom_appbar/bottom_appbar_widget.dart';
 import 'package:atabei/components/drawer/drawer_widget.dart';
-import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
-import 'package:atabei/features/timeline/data/repositories/local_image_repository.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_bloc.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_state.dart';
 import 'package:atabei/features/timeline/presentation/widgets/post_widget.dart';
-import 'package:atabei/features/timeline/data/repositories/post_repository.dart';
 import 'package:atabei/config/theme/timeline_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,8 +32,6 @@ class _TimelinePageState extends State<TimelinePage> {
   void initState() {
     super.initState();
     timelineBloc = TimelineBloc(
-      postsRepository: sl<PostRepositoryImpl>(),
-      localImageRepository: sl<LocalImageRepositoryImpl>(),
     )..add(const StartTimelineStream());
   }
 

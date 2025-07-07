@@ -12,8 +12,6 @@ import 'package:atabei/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_bloc.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_state.dart';
-import 'package:atabei/features/timeline/data/repositories/post_repository.dart';
-import 'package:atabei/features/timeline/data/repositories/local_image_repository.dart';
 import 'package:atabei/features/timeline/presentation/widgets/post_widget.dart';
 import 'package:atabei/config/theme/timeline_theme.dart';
 
@@ -42,10 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
     profileCubit = sl<ProfileCubit>();
     // profileCubit.loadProfile(widget.userId);
     
-    timelineBloc = TimelineBloc(
-      postsRepository: sl<PostRepositoryImpl>(),
-      localImageRepository: sl<LocalImageRepositoryImpl>(),
-    );
+    timelineBloc = TimelineBloc();
     
     // Get target user ID and load data
     final authState = context.read<AuthBloc>().state;

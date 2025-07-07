@@ -191,7 +191,7 @@ class PostRepositoryImpl implements PostRepository {
   }
   
   @override
-  likePost(String postId, String userId, String username) async {
+  Future<DataState<void>> likePost(String postId, String userId, String username) async {
     try {
       await _firestore.collection('likes').add({
         'postId': postId,

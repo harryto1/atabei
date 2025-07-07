@@ -6,6 +6,15 @@ import 'package:atabei/features/profile/data/repositories/user_profile_repositor
 import 'package:atabei/features/profile/presentation/cubit/profile/profile_cubit.dart';
 import 'package:atabei/features/timeline/data/repositories/local_image_repository.dart';
 import 'package:atabei/features/timeline/data/repositories/post_repository.dart';
+import 'package:atabei/features/timeline/domain/usecases/create_post.dart';
+import 'package:atabei/features/timeline/domain/usecases/delete_post.dart';
+import 'package:atabei/features/timeline/domain/usecases/get_post_stream.dart';
+import 'package:atabei/features/timeline/domain/usecases/get_posts.dart';
+import 'package:atabei/features/timeline/domain/usecases/get_posts_by_author.dart';
+import 'package:atabei/features/timeline/domain/usecases/get_posts_by_author_stream.dart';
+import 'package:atabei/features/timeline/domain/usecases/get_posts_stream.dart';
+import 'package:atabei/features/timeline/domain/usecases/like_post.dart';
+import 'package:atabei/features/timeline/domain/usecases/unlike_post.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -40,6 +49,16 @@ Future<void> initializeDependencies() async {
   // Auth
   sl.registerLazySingleton<AuthRepositoryImpl>(() => AuthRepositoryImpl(firebaseAuth: sl<FirebaseAuth>()));
 
+  // Use Cases - Timeline
+  sl.registerFactory<CreatePostUseCase>(() => CreatePostUseCase(sl<PostRepositoryImpl>(), sl<LocalImageRepositoryImpl>()));
+  sl.registerFactory<DeletePostUseCase>(() => DeletePostUseCase(sl<PostRepositoryImpl>(), sl<LocalImageRepositoryImpl>()));
+  sl.registerFactory<LikePostUseCase>(() => LikePostUseCase(sl<PostRepositoryImpl>()));
+  sl.registerFactory<UnlikePostUseCase>(() => UnlikePostUseCase(sl<PostRepositoryImpl>()));
+  sl.registerFactory<GetPostStreamUseCase>(() => GetPostStreamUseCase(sl<PostRepositoryImpl>()));
+  sl.registerFactory<GetPostsStreamUseCase>(() => GetPostsStreamUseCase(sl<PostRepositoryImpl>()));
+  sl.registerFactory<GetPostsByAuthorStreamUseCase>(() => GetPostsByAuthorStreamUseCase(sl<PostRepositoryImpl>()));
+  sl.registerFactory<GetPostsByAuthorUseCase>(() => GetPostsByAuthorUseCase(sl<PostRepositoryImpl>()));
+  sl.registerFactory<GetPostsUseCase>(() => GetPostsUseCase(sl<PostRepositoryImpl>()));
   
 
 

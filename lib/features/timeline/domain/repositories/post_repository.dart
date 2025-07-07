@@ -26,7 +26,7 @@ abstract class PostRepository {
     int limit = 20,
   });
 
-  likePost(String postId, String userId, String username) {}
+  Future<DataState<void>> likePost(String postId, String userId, String username); 
 
   unlikePost(String postId, String userId) {}
 

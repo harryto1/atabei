@@ -1,22 +1,41 @@
 import 'dart:async';
+import 'package:atabei/dependencies.dart';
 import 'package:atabei/features/timeline/domain/entities/post_entity.dart';
-import 'package:atabei/features/timeline/domain/repositories/local_image_repository.dart';
-import 'package:atabei/features/timeline/domain/repositories/post_repository.dart';
+import 'package:atabei/features/timeline/domain/usecases/create_post.dart';
+import 'package:atabei/features/timeline/domain/usecases/delete_post.dart';
+import 'package:atabei/features/timeline/domain/usecases/get_posts.dart';
+import 'package:atabei/features/timeline/domain/usecases/get_posts_by_author.dart';
+import 'package:atabei/features/timeline/domain/usecases/get_posts_by_author_stream.dart';
+import 'package:atabei/features/timeline/domain/usecases/get_posts_stream.dart';
+import 'package:atabei/features/timeline/domain/usecases/like_post.dart';
+import 'package:atabei/features/timeline/domain/usecases/unlike_post.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atabei/core/resources/data_state.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_event.dart';
 import 'package:atabei/features/timeline/presentation/bloc/timeline/timeline_state.dart';
 
 class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
-  final PostRepository _postsRepository;
-  final LocalImageRepository _localImageRepository; 
+  final GetPostsStreamUseCase _getPostsStreamUseCase;
+  final GetPostsByAuthorStreamUseCase _getPostsByAuthorStreamUseCase;
+  final CreatePostUseCase _createPostUseCase;
+  final DeletePostUseCase _deletePostUseCase;
+  final LikePostUseCase _likePostUseCase;
+  final UnlikePostUseCase _unlikePostUseCase;
+  final GetPostsUseCase _getPostsUseCase;
+  final GetPostsByAuthorUseCase _getPostsByAuthorUseCase;
   StreamSubscription? _postsStreamSubscription;
   List<PostEntity> _currentPosts = [];
   List<PostEntity> _latestStreamPosts = [];
 
-  TimelineBloc({required PostRepository postsRepository, required LocalImageRepository localImageRepository})
-      : _postsRepository = postsRepository, 
-        _localImageRepository = localImageRepository, 
+  TimelineBloc()
+      : _getPostsStreamUseCase = sl<GetPostsStreamUseCase>(), 
+        _getPostsByAuthorStreamUseCase = sl<GetPostsByAuthorStreamUseCase>(),
+        _createPostUseCase = sl<CreatePostUseCase>(),
+        _deletePostUseCase = sl<DeletePostUseCase>(),
+        _likePostUseCase = sl<LikePostUseCase>(),
+        _unlikePostUseCase = sl<UnlikePostUseCase>(),
+        _getPostsUseCase = sl<GetPostsUseCase>(),
+        _getPostsByAuthorUseCase = sl<GetPostsByAuthorUseCase>(),
         super(TimelineInitial()) {
     
     on<StartTimelineStream>(_onStartTimelineStream);
@@ -43,8 +62,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       
       await _postsStreamSubscription?.cancel();
       
-      _postsStreamSubscription = _postsRepository
-          .getPostsStream(limit: event.limit)
+      _postsStreamSubscription = _getPostsStreamUseCase(params: GetPostsStreamUseCaseParams(limit: event.limit))
           .listen(
         (dataState) {
           print('📡 Stream received data: ${dataState.runtimeType}');
@@ -171,7 +189,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       print('🔄 No stream active, fetching manually...'); // Add debug
       
       emit(TimelineLoading());
-      final result = await _postsRepository.getPosts(limit: event.limit);
+      final result = await _getPostsUseCase(params: GetPostsParams(limit: event.limit));
       
       if (result is DataSuccess) {
         _currentPosts = result.data!;
@@ -192,7 +210,13 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     if (state is TimelineLoaded) {
       final currentState = state as TimelineLoaded;
 
-      final result = await _postsRepository.likePost(event.postId, event.userId, event.username);
+      final result = await _likePostUseCase(
+        params: LikePostParams(
+          postId: event.postId,
+          userId: event.userId,
+          username: event.username,
+        ),
+      );
       
       if (result is DataSuccess) {
         // Update will come through the stream
@@ -215,7 +239,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
         posts: currentState.posts,
       ));
 
-      final result = await _postsRepository.unlikePost(event.postId, event.userId);
+      final result = await _unlikePostUseCase(params: UnlikePostParams(postId: event.postId, userId: event.userId));
       
       if (result is DataSuccess) {
         // Update will come through the stream
@@ -236,23 +260,12 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       final currentState = state as TimelineLoaded;
       emit(TimelinePostCreating(posts: currentState.posts));
 
-      var eventPost = event.post; 
-
-      if (event.imageFile != null) {
-        final imageResult = await _localImageRepository.uploadPostImage(event.imageFile!, event.post.id);
-        if (imageResult is DataSuccess) {
-          // Update the post with the image path
-          eventPost = event.post.copyWith(pathToImage: imageResult.data);
-        } else if (imageResult is DataError) {
-          print('❌ Image upload failed: ${imageResult.error?.message}');
-          emit(currentState.copyWith(
-            error: imageResult.error?.message ?? 'Failed to upload image',
-          ));
-          return; // Exit early if image upload fails
-        }
-      }
-    
-      final result = await _postsRepository.createPost(eventPost);
+      final result = await _createPostUseCase(
+        params: CreatePostParams(
+          post: event.post,
+          imageFile: event.imageFile,
+        ),
+      );
       
       if (result is DataSuccess) {
         final createdPost = result.data!;
@@ -299,7 +312,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       // Initial load without stream
       emit(TimelineLoading());
       
-      final result = await _postsRepository.getPosts(limit: event.limit);
+      final result = await _getPostsUseCase(params: GetPostsParams(limit: event.limit));
       
       if (result is DataSuccess) {
         _currentPosts = result.data!;
@@ -326,7 +339,12 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
 
       try {
         // Delete the post from the repository
-        final result1 = await _postsRepository.deletePost(event.postId);
+        final result1 = await _deletePostUseCase(
+          params: DeletePostParams(
+            postId: event.postId,
+            imageFile: event.imageFile,
+          ),
+        );
 
         if (result1 is DataError) {
           emit(currentState.copyWith(
@@ -346,14 +364,6 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
             isStreamActive: true,
           ));
           return;
-        }
-
-        final result2 = await _localImageRepository.deletePostImage(event.imageFile?.path ?? '');
-
-        if (result2 is DataError) {
-          print('❌ Local image deletion failed: ${result2.error?.message}');
-        } else {
-          print('✅ Local image deleted successfully');
         }
         
         // Remove the post from the current posts list
@@ -384,8 +394,10 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       
       await _postsStreamSubscription?.cancel();
       
-      _postsStreamSubscription = _postsRepository
-          .getPostsByAuthorStream(event.authorId, limit: event.limit)
+      _postsStreamSubscription = _getPostsByAuthorStreamUseCase(params: GetPostsByAuthorStreamParams(
+          authorId: event.authorId,
+          limit: event.limit,
+        ))
           .listen(
         (dataState) {
           print('📡 Author stream received data: ${dataState.runtimeType}');
@@ -418,9 +430,11 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     } else {
       print('🔄 No stream active, fetching author posts manually...');
       emit(TimelineLoading());
-      final result = await _postsRepository.getPostsFromAuthor(
-        authorId: event.authorId,
-        limit: event.limit,
+      final result = await _getPostsByAuthorUseCase(
+        params: GetPostsByAuthorParams(
+          authorId: event.authorId,
+          limit: event.limit,
+        ),
       );
       
       if (result is DataSuccess) {
@@ -457,9 +471,11 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     } else {
       emit(TimelineLoading());
       
-      final result = await _postsRepository.getPostsFromAuthor(
-        authorId: event.authorId,
-        limit: event.limit,
+      final result = await _getPostsByAuthorUseCase(
+        params: GetPostsByAuthorParams(
+          authorId: event.authorId,
+          limit: event.limit,
+        ),
       );
       
       if (result is DataSuccess) {
